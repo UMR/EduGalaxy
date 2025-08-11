@@ -1,0 +1,50 @@
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthController } from './auth.controller';
+import { AuthService } from './services/auth.service';
+import { TokenService } from './services/token.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { UserRepository } from '../repositories/user.repository';
+import { PasswordService } from '../common/services/password.service';
+import { RolePermissionService } from '../common/services/role-permission.service';
+import { Users } from '../entities/generated/Users';
+import { Roles } from '../entities/generated/Roles';
+import { Permissions } from '../entities/generated/Permissions';
+import { RolePermissions } from '../entities/generated/RolePermissions';
+
+@Module({
+    imports: [
+        TypeOrmModule.forFeature([Users, Roles, Permissions, RolePermissions]),
+        PassportModule,
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                secret: configService.get<string>('JWT_ACCESS_SECRET', 'default-access-secret'),
+                signOptions: {
+                    expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+                },
+            }),
+            inject: [ConfigService],
+        }),
+    ],
+    controllers: [AuthController],
+    providers: [
+        AuthService,
+        TokenService,
+        JwtStrategy,
+        UserRepository,
+        PasswordService,
+        RolePermissionService,
+    ],
+    exports: [
+        AuthService,
+        TokenService,
+        UserRepository,
+        PasswordService,
+        RolePermissionService,
+    ],
+})
+export class AuthModule { }
