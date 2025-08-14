@@ -3,7 +3,7 @@ import { UserRepository } from '../../repositories/user.repository';
 import { PasswordService } from '../../common/services/password.service';
 import { TokenService } from './token.service';
 import { LoginDto, RegisterDto } from '../dto';
-import { ILoginResponse, ITokens, IUserResponse, IAuthPayload } from '../../common/interfaces';
+import { ILoginResponse, ITokens, IUserResponse } from '../../common/interfaces';
 import {
     AuthenticationException,
     UserAlreadyExistsException,
@@ -20,25 +20,19 @@ export class AuthService {
 
     async register(registerDto: RegisterDto): Promise<IUserResponse> {
         const { email, username, password, roleName = 'student' } = registerDto;
-
-        // Validate password strength
         const passwordValidation = this.passwordService.validatePasswordStrength(password);
         if (!passwordValidation.isValid) {
             throw new ValidationException(passwordValidation.errors);
         }
-
-        // Check if user already exists
         const existingUserByEmail = await this.userRepository.findByEmail(email);
         if (existingUserByEmail) {
             throw new UserAlreadyExistsException('email');
         }
-
         const existingUserByUsername = await this.userRepository.findByUsername(username);
         if (existingUserByUsername) {
             throw new UserAlreadyExistsException('username');
         }
 
-        // Find the role
         const role = await this.userRepository.findRoleByName(roleName);
         if (!role) {
             throw new ValidationException([`Role '${roleName}' not found`]);
@@ -50,12 +44,9 @@ export class AuthService {
             email,
             username,
             password: hashedPassword,
-            roleId: role.id,
+            roleNames: [roleName],
         });
-
-        // Fetch the user with role and permissions
-        const userWithDetails = await this.userRepository.findById(user.id);
-        return this.toUserResponse(userWithDetails);
+        return this.toUserResponse(user);
     }
 
     async login(loginDto: LoginDto): Promise<ILoginResponse> {
@@ -64,27 +55,21 @@ export class AuthService {
         if (!user) {
             throw new AuthenticationException('Invalid credentials');
         }
-
-        // Check if user is active
         if (!user.isActive) {
             throw new AuthenticationException('Account is deactivated');
         }
-
-        // Verify password
         const isPasswordValid = await this.passwordService.comparePassword(password, user.password);
         if (!isPasswordValid) {
             throw new AuthenticationException('Invalid credentials');
         }
-
-        // Get user permissions
         const permissions = this.userRepository.getUserPermissions(user);
-
-        // Generate tokens
+        const userRoles = user.userRoles || [];
+        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
         const tokens = await this.tokenService.generateTokens({
             sub: user.id,
             email: user.email,
             username: user.username,
-            role: user.role.name,
+            role: primaryRole?.name || 'guest',
             permissions: permissions,
         });
 
@@ -94,13 +79,20 @@ export class AuthService {
                 id: user.id,
                 email: user.email,
                 username: user.username,
-                role: {
-                    id: user.role.id,
-                    name: user.role.name,
-                    description: user.role.description || undefined,
-                    isActive: user.role.isActive || false,
-                    createdAt: user.role.createdAt || new Date(),
-                    updatedAt: user.role.updatedAt || new Date(),
+                role: primaryRole ? {
+                    id: primaryRole.id,
+                    name: primaryRole.name,
+                    description: primaryRole.description || undefined,
+                    isActive: primaryRole.isActive || false,
+                    createdAt: primaryRole.createdAt || new Date(),
+                    updatedAt: primaryRole.updatedAt || new Date(),
+                } : {
+                    id: '',
+                    name: 'guest',
+                    description: 'Default guest role',
+                    isActive: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
                 permissions: this.getUserPermissionsAsObjects(user),
             },
@@ -115,12 +107,14 @@ export class AuthService {
         }
 
         const permissions = this.userRepository.getUserPermissions(user);
+        const userRoles = user.userRoles || [];
+        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
 
         return this.tokenService.generateTokens({
             sub: user.id,
             email: user.email,
             username: user.username,
-            role: user.role.name,
+            role: primaryRole?.name || 'guest',
             permissions: permissions,
         });
     }
@@ -131,6 +125,9 @@ export class AuthService {
     }
 
     private toUserResponse(user: any): IUserResponse {
+        const userRoles = user.userRoles || [];
+        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
+
         return {
             id: user.id,
             email: user.email,
@@ -138,13 +135,20 @@ export class AuthService {
             firstName: user.firstName,
             lastName: user.lastName,
             phone: user.phone,
-            role: {
-                id: user.role.id,
-                name: user.role.name,
-                description: user.role.description || undefined,
-                isActive: user.role.isActive || false,
-                createdAt: user.role.createdAt || new Date(),
-                updatedAt: user.role.updatedAt || new Date(),
+            role: primaryRole ? {
+                id: primaryRole.id,
+                name: primaryRole.name,
+                description: primaryRole.description || undefined,
+                isActive: primaryRole.isActive || false,
+                createdAt: primaryRole.createdAt || new Date(),
+                updatedAt: primaryRole.updatedAt || new Date(),
+            } : {
+                id: '',
+                name: 'guest',
+                description: 'Default guest role',
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             },
             permissions: this.getUserPermissionsAsObjects(user),
             isActive: user.isActive,
@@ -156,18 +160,33 @@ export class AuthService {
     }
 
     private getUserPermissionsAsObjects(user: any): any[] {
-        if (!user.role?.rolePermissions) {
+        if (!user.userRoles || user.userRoles.length === 0) {
             return [];
         }
-        return user.role.rolePermissions.map((rp: any) => ({
-            id: rp.permission.id,
-            name: rp.permission.name,
-            description: rp.permission.description || undefined,
-            resource: rp.permission.resource,
-            action: rp.permission.action,
-            isActive: rp.permission.isActive || false,
-            createdAt: rp.permission.createdAt || new Date(),
-            updatedAt: rp.permission.updatedAt || new Date(),
-        }));
+
+        const permissions: any[] = [];
+        const permissionIds = new Set<string>();
+
+        for (const userRole of user.userRoles) {
+            if (userRole.role?.rolePermissions) {
+                userRole.role.rolePermissions.forEach((rp: any) => {
+                    if (rp.permission && !permissionIds.has(rp.permission.id)) {
+                        permissionIds.add(rp.permission.id);
+                        permissions.push({
+                            id: rp.permission.id,
+                            name: rp.permission.name,
+                            description: rp.permission.description || undefined,
+                            resource: rp.permission.resource,
+                            action: rp.permission.action,
+                            isActive: rp.permission.isActive || false,
+                            createdAt: rp.permission.createdAt || new Date(),
+                            updatedAt: rp.permission.updatedAt || new Date(),
+                        });
+                    }
+                });
+            }
+        }
+
+        return permissions;
     }
 }

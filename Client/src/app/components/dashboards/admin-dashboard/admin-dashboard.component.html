@@ -1,0 +1,311 @@
+<!-- Admin Dashboard -->
+<div class="dashboard-container">
+    <!-- Dashboard Title -->
+    <div class="dashboard-welcome mb-4">
+        <h1 class="dashboard-title h3">
+            <i class="fas fa-user-shield text-primary me-2"></i>
+            Admin Dashboard
+        </h1>
+        <p class="dashboard-subtitle text-muted mb-0">Welcome back, {{ currentUser?.firstName || currentUser?.username
+            }}!</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading dashboard data...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="dashboard-content" *ngIf="!isLoading">
+        <!-- Stats Cards -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ stats?.totalUsers || 0 }}</h3>
+                        <p class="stat-label">Total Users</p>
+                    </div>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ stats?.totalStudents || 0 }}</h3>
+                        <p class="stat-label">Students</p>
+                    </div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ stats?.totalTeachers || 0 }}</h3>
+                        <p class="stat-label">Teachers</p>
+                    </div>
+                </div>
+
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ stats?.totalCourses || 0 }}</h3>
+                        <p class="stat-label">Courses</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Grid -->
+        <div class="dashboard-grid">
+            <!-- Users Section -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        User Management
+                    </h2>
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i>
+                        Add User
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <div class="table-cell">User</div>
+                        <div class="table-cell">Role</div>
+                        <div class="table-cell">Status</div>
+                        <div class="table-cell">Actions</div>
+                    </div>
+
+                    <div class="table-body">
+                        <div class="table-row" *ngFor="let user of users">
+                            <div class="table-cell">
+                                <div class="user-info">
+                                    <div class="user-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="user-details">
+                                        <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                                        <div class="user-email">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-cell">
+                                <span class="badge" [class]="'badge-' + getRoleColor(user.role.name)">
+                                    {{ getUserRoleName(user) }}
+                                </span>
+                            </div>
+                            <div class="table-cell">
+                                <span class="badge" [class]="getStatusBadgeClass(user.isActive)">
+                                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                            <div class="table-cell">
+                                <button class="btn btn-sm btn-outline" (click)="viewUser(user)">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Roles Section -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-tag"></i>
+                        Role Management
+                    </h2>
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i>
+                        Add Role
+                    </button>
+                </div>
+
+                <div class="role-cards">
+                    <div class="role-card" *ngFor="let role of roles" (click)="viewRole(role)">
+                        <div class="role-header">
+                            <h3 class="role-name">{{ role.name }}</h3>
+                            <span class="badge" [class]="getStatusBadgeClass(role.isActive)">
+                                {{ role.isActive ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+                        <p class="role-description">{{ role.description }}</p>
+                        <div class="role-meta">
+                            <span class="role-users">Users: {{ getUserCountForRole(role.id) }}</span>
+                            <span class="role-created">Created: {{ formatDate(role.createdAt) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activities -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Recent Activities
+                    </h2>
+                </div>
+
+                <div class="activity-list">
+                    <div class="activity-item" *ngFor="let activity of activities">
+                        <div class="activity-icon">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <strong>{{ activity.user }}</strong> {{ activity.action }}
+                            </div>
+                            <div class="activity-time">{{ formatDate(activity.timestamp) }}</div>
+                            <div class="activity-details" *ngIf="activity.details">{{ activity.details }}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Permissions Section -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-key"></i>
+                        Permissions
+                    </h2>
+                </div>
+
+                <div class="permission-grid">
+                    <div class="permission-card" *ngFor="let permission of permissions">
+                        <div class="permission-header">
+                            <h4 class="permission-name">{{ permission.name }}</h4>
+                            <span class="permission-resource">{{ permission.resource }}</span>
+                        </div>
+                        <p class="permission-description">{{ permission.description }}</p>
+                        <div class="permission-action">
+                            <span class="badge badge-info">{{ permission.action }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3 class="modal-title">User Details</h3>
+            <button class="modal-close" (click)="closeUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedUser">
+            <div class="user-profile">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-info">
+                    <h4>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</h4>
+                    <p>{{ selectedUser.email }}</p>
+                    <span class="badge" [class]="'badge-' + getRoleColor(selectedUser.role.name)">
+                        {{ getUserRoleName(selectedUser) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="user-details">
+                <div class="detail-item">
+                    <label>Username:</label>
+                    <span>{{ selectedUser.username }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status:</label>
+                    <span class="badge" [class]="getStatusBadgeClass(selectedUser.isActive)">
+                        {{ selectedUser.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <label>Email Verified:</label>
+                    <span class="badge" [class]="getStatusBadgeClass(selectedUser.emailVerified)">
+                        {{ selectedUser.emailVerified ? 'Verified' : 'Not Verified' }}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <label>Created:</label>
+                    <span>{{ formatDate(selectedUser.createdAt) }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>Last Updated:</label>
+                    <span>{{ formatDate(selectedUser.updatedAt) }}</span>
+                </div>
+            </div>
+
+            <div class="user-permissions" *ngIf="selectedUser.permissions && selectedUser.permissions.length > 0">
+                <h5>Permissions</h5>
+                <div class="permission-tags">
+                    <span class="badge badge-info" *ngFor="let permission of selectedUser.permissions">
+                        {{ permission.name }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-outline" (click)="closeUserModal()">Close</button>
+            <button class="btn btn-primary">Edit User</button>
+        </div>
+    </div>
+</div>
+
+<!-- Role Modal -->
+<div class="modal-overlay" *ngIf="showRoleModal" (click)="closeRoleModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3 class="modal-title">Role Management</h3>
+            <button class="modal-close" (click)="closeRoleModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedRole">
+            <div class="role-info">
+                <h4>{{ selectedRole.name }}</h4>
+                <p>{{ selectedRole.description }}</p>
+                <span class="badge" [class]="getStatusBadgeClass(selectedRole.isActive)">
+                    {{ selectedRole.isActive ? 'Active' : 'Inactive' }}
+                </span>
+            </div>
+
+            <div class="role-permissions">
+                <h5>Permissions</h5>
+                <div class="permission-checkboxes">
+                    <div class="permission-checkbox" *ngFor="let permission of permissions">
+                        <input type="checkbox" [id]="'perm-' + permission.id" [checked]="false">
+                        <label [for]="'perm-' + permission.id">
+                            {{ permission.name }} - {{ permission.description }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-outline" (click)="closeRoleModal()">Close</button>
+            <button class="btn btn-primary">Save Changes</button>
+        </div>
+    </div>
+</div>

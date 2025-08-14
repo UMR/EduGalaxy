@@ -41,7 +41,6 @@ export class UserController {
     @SwaggerResponse({ status: 200, description: 'Successfully retrieved all users' })
     @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions' })
     async getAllUsers(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any[]>> {
-        // This endpoint requires ADMIN role AND either user:read or admin:manage-users permission
         return ApiResponse.success(
             [],
             `Hello ${user.username}, you can see all users because you're an admin!`
@@ -55,7 +54,6 @@ export class UserController {
     })
     @SwaggerResponse({ status: 200, description: 'Successfully retrieved user profile' })
     async getOwnProfile(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any>> {
-        // Any authenticated user can access their own profile
         return ApiResponse.success(
             { id: user.sub, email: user.email, username: user.username, role: user.role },
             'Your profile information'
@@ -72,7 +70,6 @@ export class UserController {
     @SwaggerResponse({ status: 201, description: 'User created successfully' })
     @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions' })
     async createUser(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any>> {
-        // This endpoint requires BOTH user:create AND admin:manage-users permissions
         return ApiResponse.success(
             null,
             `Hello ${user.username}, you can create users!`
@@ -94,7 +91,6 @@ export class UserController {
         @Param('id') id: string,
         @CurrentUser() user: IAuthPayload
     ): Promise<ApiResponse<any>> {
-        // This endpoint requires ADMIN role AND either user:delete or admin:manage-users permission
         return ApiResponse.success(
             null,
             `Hello ${user.username}, you can delete user ${id}!`
@@ -112,7 +108,6 @@ export class UserController {
     @SwaggerResponse({ status: 200, description: 'Successfully retrieved student dashboard' })
     @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions or not a student' })
     async getStudentDashboard(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any>> {
-        // This endpoint is only for students with specific permissions
         return ApiResponse.success(
             { courses: [], assignments: [] },
             `Welcome to your dashboard, ${user.username}!`
@@ -133,7 +128,6 @@ export class UserController {
         @Param('courseId') courseId: string,
         @CurrentUser() user: IAuthPayload
     ): Promise<ApiResponse<any>> {
-        // Any user with student:enroll permission can enroll
         return ApiResponse.success(
             null,
             `${user.username} enrolled in course ${courseId}`

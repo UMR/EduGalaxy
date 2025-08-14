@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from '../entities/generated/Users';
 import { Roles } from '../entities/generated/Roles';
+import { UserRoles } from '../entities/generated/UserRoles';
 import { UserNotFoundException, UserAlreadyExistsException } from '../common/exceptions/auth.exceptions';
 
 interface IUserCreateData {
@@ -12,7 +13,7 @@ interface IUserCreateData {
     firstName?: string;
     lastName?: string;
     phone?: string;
-    roleId: string;
+    roleNames?: string[];
 }
 
 @Injectable()
@@ -22,10 +23,11 @@ export class UserRepository {
         private readonly userRepo: Repository<Users>,
         @InjectRepository(Roles)
         private readonly roleRepo: Repository<Roles>,
+        @InjectRepository(UserRoles)
+        private readonly userRoleRepo: Repository<UserRoles>,
     ) { }
 
     async create(userData: IUserCreateData): Promise<Users> {
-        // Check if user already exists
         const existingByEmail = await this.userRepo.findOne({ where: { email: userData.email } });
         if (existingByEmail) {
             throw new UserAlreadyExistsException('email');
@@ -35,29 +37,46 @@ export class UserRepository {
         if (existingByUsername) {
             throw new UserAlreadyExistsException('username');
         }
+        const { roleNames, ...userDataWithoutRoles } = userData;
+        const user = this.userRepo.create(userDataWithoutRoles);
+        const savedUser = await this.userRepo.save(user);
+        if (roleNames && roleNames.length > 0) {
+            const roles = await this.roleRepo.find({
+                where: roleNames.map(name => ({ name }))
+            });
 
-        const user = this.userRepo.create(userData);
-        return await this.userRepo.save(user);
+            const userRoles = roles.map(role => {
+                const userRole = this.userRoleRepo.create({
+                    userId: savedUser.id,
+                    roleId: role.id
+                });
+                return userRole;
+            });
+
+            await this.userRoleRepo.save(userRoles);
+        }
+        const userWithRoles = await this.findById(savedUser.id);
+        return userWithRoles!;
     }
 
     async findById(id: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { id },
-            relations: ['role', 'role.rolePermissions', 'role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
         });
     }
 
     async findByEmail(email: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { email },
-            relations: ['role', 'role.rolePermissions', 'role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
         });
     }
 
     async findByUsername(username: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { username },
-            relations: ['role', 'role.rolePermissions', 'role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
         });
     }
 
@@ -96,16 +115,18 @@ export class UserRepository {
     }
 
     async findByRole(roleName: string): Promise<Users[]> {
-        return await this.userRepo.find({
-            where: { role: { name: roleName } },
-            relations: ['role']
-        });
+        return await this.userRepo
+            .createQueryBuilder('user')
+            .innerJoin('user.userRoles', 'userRole')
+            .innerJoin('userRole.role', 'role')
+            .where('role.name = :roleName', { roleName })
+            .getMany();
     }
 
     async findActiveUsers(): Promise<Users[]> {
         return await this.userRepo.find({
             where: { isActive: true },
-            relations: ['role']
+            relations: ['userRoles', 'userRoles.role']
         });
     }
 
@@ -116,11 +137,48 @@ export class UserRepository {
         });
     }
 
-    // Helper method to get user permissions
     getUserPermissions(user: Users): string[] {
-        if (!user.role?.rolePermissions) {
+        if (!user.userRoles || user.userRoles.length === 0) {
             return [];
         }
-        return user.role.rolePermissions.map(rp => rp.permission.name);
+
+        const permissions: string[] = [];
+        for (const userRole of user.userRoles) {
+            if (userRole.role && userRole.role.rolePermissions) {
+                userRole.role.rolePermissions.forEach(rp => {
+                    if (rp.permission && !permissions.includes(rp.permission.name)) {
+                        permissions.push(rp.permission.name);
+                    }
+                });
+            }
+        }
+        return permissions;
+    }
+
+    async assignRolesToUser(userId: string, roleNames: string[]): Promise<void> {
+        await this.userRoleRepo.delete({ userId });
+        if (roleNames && roleNames.length > 0) {
+            const roles = await this.roleRepo.find({
+                where: roleNames.map(name => ({ name }))
+            });
+
+            const userRoles = roles.map(role => {
+                return this.userRoleRepo.create({
+                    userId: userId,
+                    roleId: role.id
+                });
+            });
+
+            await this.userRoleRepo.save(userRoles);
+        }
+    }
+
+    async getUserRoles(userId: string): Promise<Roles[]> {
+        const userRoles = await this.userRoleRepo.find({
+            where: { userId },
+            relations: ['role']
+        });
+
+        return userRoles.map(ur => ur.role);
     }
 }

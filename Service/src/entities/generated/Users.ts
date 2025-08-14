@@ -1,13 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { Roles } from "./Roles";
+import { Column, Entity, Index, OneToMany } from "typeorm";
+import { UserRoles } from "./UserRoles";
 
 @Index("idx_users_email", ["email"], {})
 @Index("users_email_key", ["email"], { unique: true })
 @Index("users_pkey", ["id"], { unique: true })
 @Index("idx_users_active", ["isActive"], {})
-@Index("idx_users_role_id", ["roleId"], {})
-@Index("users_username_key", ["username"], { unique: true })
 @Index("idx_users_username", ["username"], {})
+@Index("users_username_key", ["username"], { unique: true })
 @Entity("users", { schema: "public" })
 export class Users {
   @Column("uuid", {
@@ -43,9 +42,6 @@ export class Users {
   @Column("character varying", { name: "phone", nullable: true, length: 20 })
   phone: string | null;
 
-  @Column("uuid", { name: "role_id" })
-  roleId: string;
-
   @Column("boolean", { name: "is_active", default: () => "true" })
   isActive: boolean;
 
@@ -70,7 +66,6 @@ export class Users {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => Roles, (roles) => roles.users, { onDelete: "RESTRICT" })
-  @JoinColumn([{ name: "role_id", referencedColumnName: "id" }])
-  role: Roles;
+  @OneToMany(() => UserRoles, (userRoles) => userRoles.user)
+  userRoles: UserRoles[];
 }

@@ -1,0 +1,14 @@
+<!-- Main Application Layout -->
+<div class="main-layout" [class.sidebar-expanded]="isSidebarExpanded">
+    <!-- Sidebar Navigation -->
+    <app-sidebar></app-sidebar>
+
+    <div class="content-wrapper">
+        <app-header></app-header>
+        <main class="main-content">
+            <div class="container-fluid p-4">
+                <router-outlet></router-outlet>
+            </div>
+        </main>
+    </div>
+</div>

@@ -1,0 +1,81 @@
+<!-- Header Navigation Bar -->
+<header class="app-header">
+    <div class="header-container">
+        <!-- Left Section: Toggle & Brand -->
+        <div class="header-left">
+            <button class="sidebar-toggle" (click)="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>EduGalaxy</span>
+            </div>
+        </div>
+
+        <!-- Center Section: Navigation -->
+        <nav class="header-nav">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/courses" routerLinkActive="active">
+                        <i class="fas fa-book"></i>
+                        <span>Courses</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/calendar" routerLinkActive="active">
+                        <i class="fas fa-calendar"></i>
+                        <span>Calendar</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Right Section: User Menu & Actions -->
+        <div class="header-right">
+            <!-- Notifications -->
+            <div class="header-icon-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+
+            <!-- Messages -->
+            <div class="header-icon-btn">
+                <i class="fas fa-envelope"></i>
+                <span class="notification-badge">5</span>
+            </div>
+
+            <!-- User Menu -->
+            <div class="user-menu">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-dropdown">
+                    <div class="dropdown-header">
+                        <div class="user-name">{{ currentUser?.firstName || currentUser?.username }}</div>
+                        <div class="user-role">{{ currentUser?.role?.name }}</div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" routerLink="/profile">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a class="dropdown-item" routerLink="/settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" (click)="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

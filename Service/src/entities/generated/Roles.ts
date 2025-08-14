@@ -1,6 +1,6 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
 import { RolePermissions } from "./RolePermissions";
-import { Users } from "./Users";
+import { UserRoles } from "./UserRoles";
 
 @Index("roles_pkey", ["id"], { unique: true })
 @Index("idx_roles_active", ["isActive"], {})
@@ -45,6 +45,6 @@ export class Roles {
   @OneToMany(() => RolePermissions, (rolePermissions) => rolePermissions.role)
   rolePermissions: RolePermissions[];
 
-  @OneToMany(() => Users, (users) => users.role)
-  users: Users[];
+  @OneToMany(() => UserRoles, (userRoles) => userRoles.role)
+  userRoles: UserRoles[];
 }

@@ -12,12 +12,13 @@ import { PasswordService } from '../common/services/password.service';
 import { RolePermissionService } from '../common/services/role-permission.service';
 import { Users } from '../entities/generated/Users';
 import { Roles } from '../entities/generated/Roles';
+import { UserRoles } from '../entities/generated/UserRoles';
 import { Permissions } from '../entities/generated/Permissions';
 import { RolePermissions } from '../entities/generated/RolePermissions';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Users, Roles, Permissions, RolePermissions]),
+        TypeOrmModule.forFeature([Users, Roles, UserRoles, Permissions, RolePermissions]),
         PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],

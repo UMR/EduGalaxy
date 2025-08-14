@@ -1,0 +1,339 @@
+<!-- Modern Registration Page -->
+<div class="auth-container">
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+            <div class="shape shape-6"></div>
+        </div>
+    </div>
+
+    <!-- Registration Card -->
+    <div class="auth-card">
+        <!-- Brand Header -->
+        <div class="auth-header">
+            <div class="brand-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1 class="brand-title">Join EduGalaxy</h1>
+            <p class="brand-subtitle">Start your learning adventure today</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+            <!-- Name Fields Row -->
+            <div class="form-row">
+                <!-- First Name -->
+                <div class="form-group half-width">
+                    <label for="firstName" class="form-label">
+                        <i class="fas fa-user"></i>
+                        First Name
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="firstName" formControlName="firstName" class="form-input"
+                            placeholder="John" [class.error]="firstName?.invalid && firstName?.touched" />
+                        <div class="input-focus-border"></div>
+                    </div>
+                    <div *ngIf="firstName?.invalid && firstName?.touched" class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>First name is required</span>
+                    </div>
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-group half-width">
+                    <label for="lastName" class="form-label">
+                        <i class="fas fa-user"></i>
+                        Last Name
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="lastName" formControlName="lastName" class="form-input" placeholder="Doe"
+                            [class.error]="lastName?.invalid && lastName?.touched" />
+                        <div class="input-focus-border"></div>
+                    </div>
+                    <div *ngIf="lastName?.invalid && lastName?.touched" class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Last name is required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope"></i>
+                    Email Address
+                </label>
+                <div class="input-wrapper">
+                    <input type="email" id="email" formControlName="email" class="form-input"
+                        placeholder="john.doe@example.com" [class.error]="email?.invalid && email?.touched" />
+                    <div class="input-focus-border"></div>
+                </div>
+                <div *ngIf="email?.invalid && email?.touched" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span *ngIf="email?.errors?.['required']">Email is required</span>
+                    <span *ngIf="email?.errors?.['email']">Please enter a valid email</span>
+                </div>
+            </div>
+
+            <!-- Username Field -->
+            <div class="form-group">
+                <label for="username" class="form-label">
+                    <i class="fas fa-at"></i>
+                    Username
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="username" formControlName="username" class="form-input" placeholder="johndoe"
+                        [class.error]="username?.invalid && username?.touched" />
+                    <div class="input-focus-border"></div>
+                </div>
+                <div *ngIf="username?.invalid && username?.touched" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span *ngIf="username?.errors?.['required']">Username is required</span>
+                    <span *ngIf="username?.errors?.['minlength']">Username must be at least 3 characters</span>
+                </div>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="form-group">
+                <label for="role" class="form-label">
+                    <i class="fas fa-user-tag"></i>
+                    I am a
+                </label>
+                <div class="role-selector">
+                    <div class="role-option" [class.selected]="role?.value === 'student'"
+                        (click)="selectRole('student')">>
+                        <div class="role-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="role-content">
+                            <h4>Student</h4>
+                            <p>Learn and explore courses</p>
+                        </div>
+                    </div>
+
+                    <div class="role-option" [class.selected]="role?.value === 'teacher'"
+                        (click)="selectRole('teacher')">>
+                        <div class="role-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="role-content">
+                            <h4>Teacher</h4>
+                            <p>Create and teach courses</p>
+                        </div>
+                    </div>
+                </div>
+                <div *ngIf="role?.invalid && role?.touched" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Please select your role</span>
+                </div>
+            </div>
+
+            <!-- Password Fields Row -->
+            <div class="form-row">
+                <!-- Password -->
+                <div class="form-group half-width">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+                            class="form-input" placeholder="••••••••"
+                            [class.error]="password?.invalid && password?.touched" />
+                        <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+                            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                        </button>
+                        <div class="input-focus-border"></div>
+                    </div>
+                    <div *ngIf="password?.invalid && password?.touched" class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span *ngIf="password?.errors?.['required']">Password is required</span>
+                        <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group half-width">
+                    <label for="confirmPassword" class="form-label">
+                        <i class="fas fa-lock"></i>
+                        Confirm
+                    </label>
+                    <div class="input-wrapper">
+                        <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword"
+                            formControlName="confirmPassword" class="form-input" placeholder="••••••••"
+                            [class.error]="confirmPassword?.invalid && confirmPassword?.touched" />
+                        <button type="button" class="password-toggle" (click)="toggleConfirmPasswordVisibility()">
+                            <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                        </button>
+                        <div class="input-focus-border"></div>
+                    </div>
+                    <div *ngIf="confirmPassword?.invalid && confirmPassword?.touched" class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span *ngIf="confirmPassword?.errors?.['required']">Please confirm your password</span>
+                        <span *ngIf="confirmPassword?.errors?.['passwordMismatch']">Passwords do not match</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Strength Indicator -->
+            <div class="password-strength" *ngIf="password?.value">
+                <div class="strength-label">Password Strength:</div>
+                <div class="strength-bar">
+                    <div class="strength-fill" [style.width.%]="passwordStrength.percentage"
+                        [class]="passwordStrength.level">
+                    </div>
+                </div>
+                <div class="strength-text" [class]="passwordStrength.level">
+                    {{ passwordStrength.text }}
+                </div>
+            </div>
+
+            <!-- Terms and Privacy -->
+            <div class="form-group">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" formControlName="acceptTerms" />
+                    <span class="checkmark"></span>
+                    <span class="checkbox-label">
+                        I agree to the
+                        <a href="#" class="link">Terms of Service</a>
+                        and
+                        <a href="#" class="link">Privacy Policy</a>
+                    </span>
+                </label>
+                <div *ngIf="acceptTerms?.invalid && acceptTerms?.touched" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>You must accept the terms to continue</span>
+                </div>
+            </div>
+
+            <!-- Marketing Emails -->
+            <div class="form-group">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" formControlName="emailMarketing" />
+                    <span class="checkmark"></span>
+                    <span class="checkbox-label">
+                        Send me updates about new courses and features
+                    </span>
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading"
+                [class.loading]="isLoading">
+                <span *ngIf="!isLoading" class="btn-text">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </span>
+                <span *ngIf="isLoading" class="btn-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Creating Account...
+                </span>
+            </button>
+
+            <!-- Error Message -->
+            <div *ngIf="errorMessage" class="auth-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                {{ errorMessage }}
+            </div>
+
+            <!-- Success Message -->
+            <div *ngIf="successMessage" class="auth-success">
+                <i class="fas fa-check-circle"></i>
+                {{ successMessage }}
+            </div>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>or</span>
+        </div>
+
+        <!-- Social Registration -->
+        <div class="social-login">
+            <button type="button" class="social-btn google-btn">
+                <i class="fab fa-google"></i>
+                Sign up with Google
+            </button>
+            <button type="button" class="social-btn microsoft-btn">
+                <i class="fab fa-microsoft"></i>
+                Sign up with Microsoft
+            </button>
+        </div>
+
+        <!-- Login Link -->
+        <div class="auth-footer">
+            <p>Already have an account?
+                <a routerLink="/auth/login" class="auth-link">Sign in here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="info-section">
+        <div class="info-content">
+            <h3>Why Join EduGalaxy?</h3>
+
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Quality Courses</h4>
+                        <p>Access thousands of expert-led courses in various subjects</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Certificates</h4>
+                        <p>Earn verified certificates upon course completion</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Community</h4>
+                        <p>Connect with learners and instructors worldwide</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Mobile Learning</h4>
+                        <p>Learn anywhere, anytime with our mobile app</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat-item">
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">2K+</div>
+                    <div class="stat-label">Courses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Instructors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

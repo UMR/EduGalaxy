@@ -1,0 +1,59 @@
+/* Main Layout Styles */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-light);
+  position: relative;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 70px; /* Default for collapsed sidebar */
+  transition: margin-left 0.3s ease;
+}
+
+.main-layout.sidebar-expanded .content-wrapper {
+  margin-left: 280px;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 70px; /* Height of the header */
+  min-height: calc(100vh - 70px);
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+  background-color: var(--bg-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+/* Handle scrollbars */
+.main-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-wrapper {
+    margin-left: 0;
+  }
+
+  .main-layout.sidebar-expanded .content-wrapper {
+    margin-left: 0;
+  }
+}

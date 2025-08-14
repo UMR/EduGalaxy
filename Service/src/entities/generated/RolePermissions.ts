@@ -4,8 +4,8 @@ import { Roles } from "./Roles";
 
 @Index("idx_role_permissions_granted_at", ["grantedAt"], {})
 @Index("role_permissions_pkey", ["id"], { unique: true })
-@Index("idx_role_permissions_permission_id", ["permissionId"], {})
 @Index("uk_role_permission", ["permissionId", "roleId"], { unique: true })
+@Index("idx_role_permissions_permission_id", ["permissionId"], {})
 @Index("idx_role_permissions_role_id", ["roleId"], {})
 @Entity("role_permissions", { schema: "public" })
 export class RolePermissions {
