@@ -1,5 +1,4 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
-import { RolePermissions } from "./RolePermissions";
 import { UserRoles } from "./UserRoles";
 
 @Index("roles_pkey", ["id"], { unique: true })
@@ -41,9 +40,6 @@ export class Roles {
     default: () => "CURRENT_TIMESTAMP",
   })
   updatedAt: Date | null;
-
-  @OneToMany(() => RolePermissions, (rolePermissions) => rolePermissions.role)
-  rolePermissions: RolePermissions[];
 
   @OneToMany(() => UserRoles, (userRoles) => userRoles.role)
   userRoles: UserRoles[];

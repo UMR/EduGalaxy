@@ -41,25 +41,5 @@ UPDATE ON user_roles
 EXECUTE FUNCTION update_updated_at_column
 ();
 
--- Populate UserRole table with existing user-role assignments from temp table
--- (This will run if the temp table exists from the alter users script)
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1
-    FROM information_schema.tables
-    WHERE table_name = 'temp_user_roles') THEN
-    INSERT INTO user_roles
-        (user_id, role_id)
-    SELECT user_id, role_id
-    FROM temp_user_roles;
-
-    -- Drop the temporary table
-    DROP TABLE temp_user_roles;
-
-    RAISE NOTICE 'Migrated existing user-role assignments to user_roles table';
-END
-IF;
-END $$;
-
 -- UserRole table created successfully
 -- The table now supports many-to-many relationship between users and roles

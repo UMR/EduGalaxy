@@ -16,9 +16,9 @@ import {
     ApiUnauthorizedResponse
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { Roles, RequireAnyPermission, RequireAllPermissions, CurrentUser } from '../auth/decorators';
+import { RolesPermissionsGuard } from '../auth/guards/roles-permissions.guard';
+import { RequireAnyPermission, RequireAllPermissions, CurrentUser, Roles } from '../auth/decorators';
+import { DefaultPermissions, UserRole } from '../common/config/default-permissions.config';
 import type { IAuthPayload } from '../common/interfaces';
 import { ApiResponse } from '../common/dto/api-response.dto';
 
@@ -31,19 +31,19 @@ export class UserController {
     constructor() { }
 
     @Get()
-    @UseGuards(RolesGuard, PermissionsGuard)
-    @Roles('admin')
-    @RequireAnyPermission('user:read', 'admin:manage-users')
+    @UseGuards(RolesPermissionsGuard)
+    @Roles(UserRole.ADMIN)
+    @RequireAnyPermission(DefaultPermissions.MANAGE_USERS, DefaultPermissions.VIEW_ALL_REPORTS)
     @ApiOperation({
         summary: 'Get all users',
-        description: 'Requires ADMIN role and either user:read or admin:manage-users permission'
+        description: 'Requires admin role AND (MANAGE_USERS OR VIEW_ALL_REPORTS) permission'
     })
     @SwaggerResponse({ status: 200, description: 'Successfully retrieved all users' })
     @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions' })
     async getAllUsers(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any[]>> {
         return ApiResponse.success(
             [],
-            `Hello ${user.username}, you can see all users because you're an admin!`
+            `Hello ${user.username}, you can see all users!`
         );
     }
 
@@ -61,11 +61,12 @@ export class UserController {
     }
 
     @Post()
-    @UseGuards(PermissionsGuard)
-    @RequireAllPermissions('user:create', 'admin:manage-users')
+    @UseGuards(RolesPermissionsGuard)
+    @Roles(UserRole.ADMIN)
+    @RequireAllPermissions(DefaultPermissions.MANAGE_USERS)
     @ApiOperation({
         summary: 'Create a new user',
-        description: 'Requires both user:create and admin:manage-users permissions'
+        description: 'Requires admin role AND MANAGE_USERS permission'
     })
     @SwaggerResponse({ status: 201, description: 'User created successfully' })
     @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions' })
@@ -77,12 +78,12 @@ export class UserController {
     }
 
     @Delete(':id')
-    @UseGuards(RolesGuard, PermissionsGuard)
-    @Roles('admin')
-    @RequireAnyPermission('user:delete', 'admin:manage-users')
+    @UseGuards(RolesPermissionsGuard)
+    @Roles(UserRole.ADMIN)
+    @RequireAnyPermission(DefaultPermissions.MANAGE_USERS)
     @ApiOperation({
         summary: 'Delete a user',
-        description: 'Requires ADMIN role and either user:delete or admin:manage-users permission'
+        description: 'Requires admin role AND MANAGE_USERS permission'
     })
     @ApiParam({ name: 'id', description: 'User ID to delete' })
     @SwaggerResponse({ status: 200, description: 'User deleted successfully' })
@@ -98,15 +99,15 @@ export class UserController {
     }
 
     @Get('student-dashboard')
-    @UseGuards(RolesGuard, PermissionsGuard)
-    @Roles('student')
-    @RequireAnyPermission('student:view-courses', 'student:enroll')
+    @UseGuards(RolesPermissionsGuard)
+    @Roles(UserRole.STUDENT, UserRole.TEACHER)
+    @RequireAnyPermission(DefaultPermissions.VIEW_COURSES, DefaultPermissions.ENROLL_COURSE)
     @ApiOperation({
         summary: 'Get student dashboard',
-        description: 'Get dashboard data for students. Requires STUDENT role and either student:view-courses or student:enroll permission'
+        description: 'Requires (student OR teacher role) AND (VIEW_COURSES OR ENROLL_COURSE) permission'
     })
     @SwaggerResponse({ status: 200, description: 'Successfully retrieved student dashboard' })
-    @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions or not a student' })
+    @ApiForbiddenResponse({ description: 'Forbidden - Insufficient permissions' })
     async getStudentDashboard(@CurrentUser() user: IAuthPayload): Promise<ApiResponse<any>> {
         return ApiResponse.success(
             { courses: [], assignments: [] },
@@ -115,11 +116,12 @@ export class UserController {
     }
 
     @Post('enroll/:courseId')
-    @UseGuards(PermissionsGuard)
-    @RequireAnyPermission('student:enroll')
+    @UseGuards(RolesPermissionsGuard)
+    @Roles(UserRole.STUDENT)
+    @RequireAnyPermission(DefaultPermissions.ENROLL_COURSE)
     @ApiOperation({
         summary: 'Enroll in a course',
-        description: 'Enroll the current user in a course. Requires student:enroll permission'
+        description: 'Requires student role AND ENROLL_COURSE permission'
     })
     @ApiParam({ name: 'courseId', description: 'Course ID to enroll in' })
     @SwaggerResponse({ status: 201, description: 'Successfully enrolled in course' })

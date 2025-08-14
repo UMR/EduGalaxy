@@ -318,24 +318,26 @@ All responses follow this structure:
 - `STUDENT_ENROLL`, `STUDENT_VIEW_COURSES`
 - `STUDENT_SUBMIT_ASSIGNMENT`
 
-### Using Permission Decorators
+### Using Combined Roles and Permissions
 
 ```typescript
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
+@UseGuards(JwtAuthGuard, RolesPermissionsGuard)
+@Roles(UserRole.ADMIN)
 export class AdminController {
   @Get('users')
-  @UseGuards(PermissionsGuard)
-  @RequireAnyPermission(Permission.USER_READ, Permission.ADMIN_MANAGE_USERS)
+  @RequireAnyPermission(
+    DefaultPermissions.MANAGE_USERS,
+    DefaultPermissions.VIEW_ALL_REPORTS,
+  )
   async getUsers() {
-    // Requires admin role AND (USER_READ OR ADMIN_MANAGE_USERS)
+    // Requires admin role AND (MANAGE_USERS OR VIEW_ALL_REPORTS permission)
   }
 
   @Delete('users/:id')
-  @RequireAllPermissions(Permission.USER_DELETE, Permission.ADMIN_MANAGE_USERS)
+  @RequireAllPermissions(DefaultPermissions.MANAGE_USERS)
   async deleteUser() {
-    // Requires BOTH permissions
+    // Requires admin role AND MANAGE_USERS permission
   }
 }
 ```

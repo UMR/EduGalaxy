@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { PasswordService } from '../../common/services/password.service';
 import { TokenService } from './token.service';
+import { RolePermissionAssignmentService } from '../../common/services/role-permission-assignment.service';
 import { LoginDto, RegisterDto } from '../dto';
 import { ILoginResponse, ITokens, IUserResponse } from '../../common/interfaces';
+import { RoleType } from '../../common/config/default-permissions.config';
 import {
     AuthenticationException,
     UserAlreadyExistsException,
@@ -16,10 +18,11 @@ export class AuthService {
         private readonly userRepository: UserRepository,
         private readonly passwordService: PasswordService,
         private readonly tokenService: TokenService,
+        private readonly rolePermissionAssignmentService: RolePermissionAssignmentService,
     ) { }
 
     async register(registerDto: RegisterDto): Promise<IUserResponse> {
-        const { email, username, password, roleName = 'student' } = registerDto;
+        const { email, username, password, roleName } = registerDto;
         const passwordValidation = this.passwordService.validatePasswordStrength(password);
         if (!passwordValidation.isValid) {
             throw new ValidationException(passwordValidation.errors);
@@ -33,20 +36,21 @@ export class AuthService {
             throw new UserAlreadyExistsException('username');
         }
 
-        const role = await this.userRepository.findRoleByName(roleName);
-        if (!role) {
-            throw new ValidationException([`Role '${roleName}' not found`]);
-        }
-
         const hashedPassword = await this.passwordService.hashPassword(password);
 
         const user = await this.userRepository.create({
             email,
             username,
             password: hashedPassword,
-            roleNames: [roleName],
         });
-        return this.toUserResponse(user);
+
+        await this.rolePermissionAssignmentService.assignDefaultRoleAndPermissions(
+            user.id,
+            (roleName as RoleType) || 'student'
+        );
+
+        const updatedUser = await this.userRepository.findById(user.id);
+        return await this.toUserResponse(updatedUser!);
     }
 
     async login(loginDto: LoginDto): Promise<ILoginResponse> {
@@ -62,14 +66,15 @@ export class AuthService {
         if (!isPasswordValid) {
             throw new AuthenticationException('Invalid credentials');
         }
-        const permissions = this.userRepository.getUserPermissions(user);
-        const userRoles = user.userRoles || [];
-        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
+
+        const permissions = await this.userRepository.getUserPermissions(user.id);
+        const primaryRole = user.userRoles?.[0]?.role || null;
+
         const tokens = await this.tokenService.generateTokens({
             sub: user.id,
             email: user.email,
             username: user.username,
-            role: primaryRole?.name || 'guest',
+            role: primaryRole?.name || 'user',
             permissions: permissions,
         });
 
@@ -88,13 +93,13 @@ export class AuthService {
                     updatedAt: primaryRole.updatedAt || new Date(),
                 } : {
                     id: '',
-                    name: 'guest',
-                    description: 'Default guest role',
+                    name: 'user',
+                    description: 'Default user role',
                     isActive: true,
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
-                permissions: this.getUserPermissionsAsObjects(user),
+                permissions: await this.userRepository.getUserPermissionsAsObjects(user.id),
             },
         };
     }
@@ -106,27 +111,25 @@ export class AuthService {
             throw new AuthenticationException('User not found or inactive');
         }
 
-        const permissions = this.userRepository.getUserPermissions(user);
-        const userRoles = user.userRoles || [];
-        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
+        const permissions = await this.userRepository.getUserPermissions(user.id);
+        const primaryRole = user.userRoles?.[0]?.role || null;
 
         return this.tokenService.generateTokens({
             sub: user.id,
             email: user.email,
             username: user.username,
-            role: primaryRole?.name || 'guest',
+            role: primaryRole?.name || 'user',
             permissions: permissions,
         });
     }
 
     async validateUser(userId: string): Promise<IUserResponse | null> {
         const user = await this.userRepository.findById(userId);
-        return user ? this.toUserResponse(user) : null;
+        return user ? await this.toUserResponse(user) : null;
     }
 
-    private toUserResponse(user: any): IUserResponse {
-        const userRoles = user.userRoles || [];
-        const primaryRole = userRoles.length > 0 ? userRoles[0].role : null;
+    private async toUserResponse(user: any): Promise<IUserResponse> {
+        const primaryRole = user.userRoles?.[0]?.role || null;
 
         return {
             id: user.id,
@@ -144,49 +147,18 @@ export class AuthService {
                 updatedAt: primaryRole.updatedAt || new Date(),
             } : {
                 id: '',
-                name: 'guest',
-                description: 'Default guest role',
+                name: 'student',
+                description: 'Default student role',
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             },
-            permissions: this.getUserPermissionsAsObjects(user),
+            permissions: await this.userRepository.getUserPermissionsAsObjects(user.id),
             isActive: user.isActive,
             emailVerified: user.emailVerified,
             lastLoginAt: user.lastLoginAt,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         };
-    }
-
-    private getUserPermissionsAsObjects(user: any): any[] {
-        if (!user.userRoles || user.userRoles.length === 0) {
-            return [];
-        }
-
-        const permissions: any[] = [];
-        const permissionIds = new Set<string>();
-
-        for (const userRole of user.userRoles) {
-            if (userRole.role?.rolePermissions) {
-                userRole.role.rolePermissions.forEach((rp: any) => {
-                    if (rp.permission && !permissionIds.has(rp.permission.id)) {
-                        permissionIds.add(rp.permission.id);
-                        permissions.push({
-                            id: rp.permission.id,
-                            name: rp.permission.name,
-                            description: rp.permission.description || undefined,
-                            resource: rp.permission.resource,
-                            action: rp.permission.action,
-                            isActive: rp.permission.isActive || false,
-                            createdAt: rp.permission.createdAt || new Date(),
-                            updatedAt: rp.permission.updatedAt || new Date(),
-                        });
-                    }
-                });
-            }
-        }
-
-        return permissions;
     }
 }

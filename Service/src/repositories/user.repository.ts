@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Users } from '../entities/generated/Users';
 import { Roles } from '../entities/generated/Roles';
 import { UserRoles } from '../entities/generated/UserRoles';
+import { UserPermissions } from '../entities/generated/UserPermissions';
 import { UserNotFoundException, UserAlreadyExistsException } from '../common/exceptions/auth.exceptions';
 
 interface IUserCreateData {
@@ -25,6 +26,8 @@ export class UserRepository {
         private readonly roleRepo: Repository<Roles>,
         @InjectRepository(UserRoles)
         private readonly userRoleRepo: Repository<UserRoles>,
+        @InjectRepository(UserPermissions)
+        private readonly userPermissionRepo: Repository<UserPermissions>,
     ) { }
 
     async create(userData: IUserCreateData): Promise<Users> {
@@ -62,21 +65,21 @@ export class UserRepository {
     async findById(id: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { id },
-            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role']
         });
     }
 
     async findByEmail(email: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { email },
-            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role']
         });
     }
 
     async findByUsername(username: string): Promise<Users | null> {
         return await this.userRepo.findOne({
             where: { username },
-            relations: ['userRoles', 'userRoles.role', 'userRoles.role.rolePermissions', 'userRoles.role.rolePermissions.permission']
+            relations: ['userRoles', 'userRoles.role']
         });
     }
 
@@ -100,7 +103,7 @@ export class UserRepository {
 
     async findAll(): Promise<Users[]> {
         return await this.userRepo.find({
-            relations: ['role']
+            relations: ['userRoles', 'userRoles.role']
         });
     }
 
@@ -133,25 +136,58 @@ export class UserRepository {
     async findRoleByName(roleName: string): Promise<Roles | null> {
         return await this.roleRepo.findOne({
             where: { name: roleName },
-            relations: ['rolePermissions', 'rolePermissions.permission']
+            relations: ['userRoles']
         });
     }
 
-    getUserPermissions(user: Users): string[] {
-        if (!user.userRoles || user.userRoles.length === 0) {
+    async getUserPermissions(userId: string): Promise<string[]> {
+        const userPermissions = await this.userPermissionRepo.find({
+            where: { userId },
+            relations: ['permission']
+        });
+
+        if (!userPermissions || userPermissions.length === 0) {
             return [];
         }
 
         const permissions: string[] = [];
-        for (const userRole of user.userRoles) {
-            if (userRole.role && userRole.role.rolePermissions) {
-                userRole.role.rolePermissions.forEach(rp => {
-                    if (rp.permission && !permissions.includes(rp.permission.name)) {
-                        permissions.push(rp.permission.name);
-                    }
-                });
+        for (const userPermission of userPermissions) {
+            if (userPermission.permission && !permissions.includes(userPermission.permission.name)) {
+                permissions.push(userPermission.permission.name);
             }
         }
+        return permissions;
+    }
+
+    async getUserPermissionsAsObjects(userId: string): Promise<any[]> {
+        const userPermissions = await this.userPermissionRepo.find({
+            where: { userId },
+            relations: ['permission']
+        });
+
+        if (!userPermissions || userPermissions.length === 0) {
+            return [];
+        }
+
+        const permissions: any[] = [];
+        const permissionIds = new Set<string>();
+
+        userPermissions.forEach((up: any) => {
+            if (up.permission && !permissionIds.has(up.permission.id)) {
+                permissionIds.add(up.permission.id);
+                permissions.push({
+                    id: up.permission.id,
+                    name: up.permission.name,
+                    description: up.permission.description || undefined,
+                    resource: up.permission.resource,
+                    action: up.permission.action,
+                    isActive: up.permission.isActive || false,
+                    createdAt: up.permission.createdAt || new Date(),
+                    updatedAt: up.permission.updatedAt || new Date(),
+                });
+            }
+        });
+
         return permissions;
     }
 

@@ -4,8 +4,8 @@ export interface IAuthPayload {
     sub: string;
     email: string;
     username: string;
-    role: string; // role name (string) for JWT payload
-    permissions: string[]; // permission names (strings) for JWT payload
+    role: string;
+    permissions: string[];
     iat?: number;
     exp?: number;
 }
