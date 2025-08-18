@@ -12,6 +12,7 @@ import { Roles } from './entities/generated/Roles';
 import { Permissions } from './entities/generated/Permissions';
 import { UserPermissions } from './entities/generated/UserPermissions';
 import { UserRoles } from './entities/generated/UserRoles';
+import { Menus } from './entities/generated/Menus';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { UserRoles } from './entities/generated/UserRoles';
         username: configService.get('DB_USERNAME', 'postgres'),
         password: configService.get('DB_PASSWORD', '123456'),
         database: configService.get('DB_NAME', 'edugalaxy'),
-        entities: [Users, Roles, Permissions, UserPermissions, UserRoles],
+        entities: [Users, Roles, Permissions, UserPermissions, UserRoles, Menus],
         synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
         ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
