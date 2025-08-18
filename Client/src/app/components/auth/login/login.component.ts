@@ -26,8 +26,6 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
         this.initializeForm();
-
-        // Redirect if already logged in
         if (this.authService.isLoggedIn()) {
             this.router.navigate(['/dashboard']);
         }
@@ -59,7 +57,6 @@ export class LoginComponent implements OnInit {
                 next: (response) => {
                     console.log('Login successful:', response);
 
-                    // Navigate based on user role
                     const user = this.authService.getCurrentUserValue();
                     if (user?.role?.name?.toLowerCase() === 'admin') {
                         this.router.navigate(['/admin']);
@@ -90,30 +87,5 @@ export class LoginComponent implements OnInit {
             const control = this.loginForm.get(key);
             control?.markAsTouched();
         });
-    }
-
-    // Demo login methods
-    loginAsAdmin() {
-        this.loginForm.patchValue({
-            email: 'admin@edugalaxy.com',
-            password: 'admin123'
-        });
-        this.onSubmit();
-    }
-
-    loginAsTeacher() {
-        this.loginForm.patchValue({
-            email: 'teacher@edugalaxy.com',
-            password: 'teacher123'
-        });
-        this.onSubmit();
-    }
-
-    loginAsStudent() {
-        this.loginForm.patchValue({
-            email: 'student@edugalaxy.com',
-            password: 'student123'
-        });
-        this.onSubmit();
     }
 }
