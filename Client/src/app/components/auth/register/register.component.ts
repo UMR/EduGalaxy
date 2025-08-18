@@ -132,13 +132,17 @@ export class RegisterComponent implements OnInit {
             delete formData.confirmPassword;
             delete formData.acceptTerms;
             delete formData.emailMarketing;
+            var request = {
+                'email': formData.email,
+                'username': formData.username,
+                'password': formData.password,
+                'roleName': formData.role
+            }
 
-            this.authService.register(formData).subscribe({
+            this.authService.register(request).subscribe({
                 next: (response) => {
                     console.log('Registration successful:', response);
                     this.successMessage = 'Registration successful! You can now sign in with your credentials.';
-
-                    // Redirect to login after 2 seconds
                     setTimeout(() => {
                         this.router.navigate(['/auth/login']);
                     }, 2000);
