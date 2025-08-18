@@ -3,8 +3,8 @@ import { Roles } from "./Roles";
 import { Users } from "./Users";
 
 @Index("user_roles_pkey", ["id"], { unique: true })
-@Index("idx_user_roles_role_id", ["roleId"], {})
 @Index("uk_user_roles_user_role", ["roleId", "userId"], { unique: true })
+@Index("idx_user_roles_role_id", ["roleId"], {})
 @Index("idx_user_roles_user_id", ["userId"], {})
 @Entity("user_roles", { schema: "public" })
 export class UserRoles {
