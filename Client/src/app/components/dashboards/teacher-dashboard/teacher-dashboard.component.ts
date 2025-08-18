@@ -38,8 +38,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     loadDashboardData() {
         console.log('Loading teacher dashboard data...');
         this.isLoading = true;
-
-        // Add a timeout fallback in case data loading takes too long
         const timeoutId = setTimeout(() => {
             if (this.isLoading) {
                 console.warn('Dashboard loading timeout, forcing completion');

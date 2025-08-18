@@ -29,7 +29,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        // Check localStorage for sidebar state
         const savedState = localStorage.getItem('sidebar-collapsed');
         if (savedState) {
             this.isCollapsed = savedState === 'true';

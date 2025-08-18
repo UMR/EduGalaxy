@@ -292,15 +292,6 @@ export class DashboardService {
             }
         ];
     }
-
-    private handleError<T>(operation = 'operation', result?: T) {
-        return (error: any): Observable<T> => {
-            console.error(`${operation} failed:`, error);
-            return of(result as T);
-        };
-    }
-
-    // Utility methods for dashboards
     setLoading(isLoading: boolean) {
         this.loadingSubject.next(isLoading);
     }

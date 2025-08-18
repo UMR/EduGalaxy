@@ -116,14 +116,9 @@ export class AuthService {
     }
 
     logout(navigate: boolean = true): void {
-        // Clear stored data
         localStorage.removeItem(this.tokenKey);
         localStorage.removeItem(this.refreshTokenKey);
-
-        // Clear current user
         this.currentUserSubject.next(null);
-
-        // Redirect to login unless suppressed
         if (navigate) {
             this.router.navigate(['/auth/login']);
         }

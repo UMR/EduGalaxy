@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControlOptions } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
@@ -27,8 +27,6 @@ export class RegisterComponent implements OnInit {
 
     ngOnInit() {
         this.initializeForm();
-
-        // Redirect if already logged in
         if (this.authService.isLoggedIn()) {
             this.router.navigate(['/dashboard']);
         }
@@ -45,10 +43,9 @@ export class RegisterComponent implements OnInit {
             role: ['', [Validators.required]],
             acceptTerms: [false, [Validators.requiredTrue]],
             emailMarketing: [false]
-        }, { validators: this.passwordMatchValidator });
+        }, { validators: this.passwordMatchValidator } as AbstractControlOptions);
     }
 
-    // Custom validator for password confirmation
     passwordMatchValidator(form: FormGroup) {
         const password = form.get('password');
         const confirmPassword = form.get('confirmPassword');

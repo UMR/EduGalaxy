@@ -12,7 +12,7 @@ import { HeaderComponent } from '../header/header.component';
     styleUrls: ['./main-layout.component.css']
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
-    isSidebarExpanded = true;
+    isSidebarExpanded = false;
     private toggleListener?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) { }
@@ -25,7 +25,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
         this.toggleListener = () => {
             this.isSidebarExpanded = !this.isSidebarExpanded;
-            this.cdr.detectChanges(); // Trigger change detection
+            this.cdr.detectChanges();
             console.log('Sidebar toggled:', this.isSidebarExpanded);
         };
 
