@@ -18,10 +18,13 @@ import { UserPermissions } from '../entities/generated/UserPermissions';
 import { UserPermissionService } from '../services/user-permission.service';
 import { UserPermissionRepository } from '../repositories/user-permission.repository';
 import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
+import { MenuService } from 'src/services/menu.service';
+import { Menus } from '../entities/generated/Menus';
+import { MenuRepository } from 'src/repositories/menus.repository';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Users, Roles, UserRoles, Permissions, UserPermissions]),
+        TypeOrmModule.forFeature([Users, Roles, UserRoles, Permissions, UserPermissions, Menus]),
         PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -45,6 +48,8 @@ import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
         UserPermissionService,
         UserPermissionRepository,
         RolesPermissionsGuard,
+        MenuRepository,
+        MenuService
     ],
     exports: [
         AuthService,
@@ -53,7 +58,10 @@ import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
         PasswordService,
         RolePermissionAssignmentService,
         UserPermissionService,
+        UserPermissionRepository,
         RolesPermissionsGuard,
+        MenuRepository,
+        MenuService
     ],
 })
 export class AuthModule { }

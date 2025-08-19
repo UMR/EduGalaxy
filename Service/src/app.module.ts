@@ -13,6 +13,8 @@ import { Permissions } from './entities/generated/Permissions';
 import { UserPermissions } from './entities/generated/UserPermissions';
 import { UserRoles } from './entities/generated/UserRoles';
 import { Menus } from './entities/generated/Menus';
+import { MenuService } from './services/menu.service';
+import { UserPermissionService } from './services/user-permission.service';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { Menus } from './entities/generated/Menus';
   controllers: [AppController],
   providers: [
     AppService,
+    MenuService,
+    UserPermissionService,
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
