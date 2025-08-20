@@ -5,6 +5,7 @@ import { Roles } from '../../entities/generated/Roles';
 import { Permissions } from '../../entities/generated/Permissions';
 import { UserRoles } from '../../entities/generated/UserRoles';
 import { UserPermissionService } from '../../services/user-permission.service';
+import { MenuService } from '../../services/menu.service';
 import { DEFAULT_PERMISSIONS_CONFIG, DEFAULT_ROLE, RoleType } from '../config/default-permissions.config';
 
 @Injectable()
@@ -17,12 +18,14 @@ export class RolePermissionAssignmentService {
         @InjectRepository(UserRoles)
         private readonly userRoleRepo: Repository<UserRoles>,
         private readonly userPermissionService: UserPermissionService,
+        private readonly menuService: MenuService,
     ) { }
 
     async assignDefaultRoleAndPermissions(userId: string, roleType?: RoleType): Promise<void> {
         const roleName = roleType || DEFAULT_ROLE;
         await this.assignRoleToUser(userId, roleName);
         await this.assignDefaultPermissions(userId, roleName);
+        await this.menuService.assignMenusToUser(userId, roleName);
     }
 
     private async assignRoleToUser(userId: string, roleName: string): Promise<void> {
@@ -51,10 +54,10 @@ export class RolePermissionAssignmentService {
             return;
         }
         const permissions = await this.permissionRepo.find({
-            where: permissionNames.map(name => ({ name }))
+            where: permissionNames.map(name => ({ permissionKey: name }))
         });
 
-        const foundPermissionNames = permissions.map(p => p.name);
+        const foundPermissionNames = permissions.map(p => p.permissionKey);
         const missingPermissions = permissionNames.filter(name => !foundPermissionNames.includes(name));
 
         if (missingPermissions.length > 0) {
@@ -75,7 +78,7 @@ export class RolePermissionAssignmentService {
     }
 
     async addPermissionToUser(userId: string, permissionName: string, grantedBy?: string): Promise<void> {
-        const permission = await this.permissionRepo.findOne({ where: { name: permissionName } });
+        const permission = await this.permissionRepo.findOne({ where: { permissionKey: permissionName } });
         if (!permission) {
             throw new Error(`Permission '${permissionName}' not found`);
         }
@@ -88,7 +91,7 @@ export class RolePermissionAssignmentService {
     }
 
     async removePermissionFromUser(userId: string, permissionName: string): Promise<void> {
-        const permission = await this.permissionRepo.findOne({ where: { name: permissionName } });
+        const permission = await this.permissionRepo.findOne({ where: { permissionKey: permissionName } });
         if (!permission) {
             throw new Error(`Permission '${permissionName}' not found`);
         }

@@ -57,23 +57,23 @@ export class LoginComponent implements OnInit {
                 next: (response) => {
                     console.log('Login successful:', response);
 
-                    const user = this.authService.getCurrentUserValue();
-                    if (user?.role?.name?.toLowerCase() === 'admin') {
-                        this.router.navigate(['/admin']);
-                    } else if (user?.role?.name?.toLowerCase() === 'teacher') {
-                        this.router.navigate(['/teacher']);
-                    } else if (user?.role?.name?.toLowerCase() === 'student') {
-                        this.router.navigate(['/student']);
-                    } else {
-                        this.router.navigate(['/dashboard']);
-                    }
+                    setTimeout(() => {
+                        const user = this.authService.getCurrentUserValue();
+                        if (user?.role?.name?.toLowerCase() === 'admin') {
+                            this.router.navigate(['/admin']);
+                        } else if (user?.role?.name?.toLowerCase() === 'teacher') {
+                            this.router.navigate(['/teacher']);
+                        } else if (user?.role?.name?.toLowerCase() === 'student') {
+                            this.router.navigate(['/student']);
+                        } else {
+                            this.router.navigate(['/dashboard']);
+                        }
+                        this.isLoading = false;
+                    }, 100);
                 },
                 error: (error) => {
                     console.error('Login error:', error);
                     this.errorMessage = error.error?.message || 'Invalid email or password. Please try again.';
-                    this.isLoading = false;
-                },
-                complete: () => {
                     this.isLoading = false;
                 }
             });

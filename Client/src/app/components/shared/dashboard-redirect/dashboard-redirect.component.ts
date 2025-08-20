@@ -24,7 +24,7 @@ export class DashboardRedirectComponent implements OnInit {
 
     async ngOnInit() {
         try {
-            const user = await this.authService.waitForUserLoad();
+            const user = await this.authService.getCurrentUserFromLocalStorage();
 
             if (!user) {
                 this.router.navigate(['/auth/login']);

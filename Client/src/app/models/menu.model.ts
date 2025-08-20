@@ -29,3 +29,20 @@ export interface MenuGroup {
 export interface MenuConfig {
     groups: MenuGroup[];
 }
+
+// Server response interface
+export interface ServerMenuItem {
+    id: string;
+    title: string;
+    description: string;
+    parentId: string | null;
+    route: string;
+    permissionId: string;
+    sortOrder: number;
+    isActive: boolean;
+    createdBy: string;
+    createdAt: string;
+    updatedBy: string | null;
+    updatedAt: string | null;
+    children: ServerMenuItem[];
+}

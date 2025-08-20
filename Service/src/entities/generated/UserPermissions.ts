@@ -1,10 +1,9 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { Users } from "./Users";
 import { Permissions } from "./Permissions";
 
 @Index("user_permissions_pkey", ["id"], { unique: true })
-@Index("uk_user_permission", ["permissionId", "userId"], { unique: true })
 @Index("idx_user_permissions_permission_id", ["permissionId"], {})
+@Index("uk_user_permission", ["permissionId", "userId"], { unique: true })
 @Index("idx_user_permissions_user_id", ["userId"], {})
 @Entity("user_permissions", { schema: "public" })
 export class UserPermissions {
@@ -28,21 +27,12 @@ export class UserPermissions {
   })
   grantedAt: Date | null;
 
-  @ManyToOne(() => Users, (users) => users.userPermissions, {
-    onDelete: "SET NULL",
-  })
-  @JoinColumn([{ name: "granted_by", referencedColumnName: "id" }])
-  grantedBy: Users;
+  @Column("uuid", { name: "granted_by", nullable: true })
+  grantedBy: string | null;
 
   @ManyToOne(() => Permissions, (permissions) => permissions.userPermissions, {
     onDelete: "CASCADE",
   })
   @JoinColumn([{ name: "permission_id", referencedColumnName: "id" }])
   permission: Permissions;
-
-  @ManyToOne(() => Users, (users) => users.userPermissions2, {
-    onDelete: "CASCADE",
-  })
-  @JoinColumn([{ name: "user_id", referencedColumnName: "id" }])
-  user: Users;
 }

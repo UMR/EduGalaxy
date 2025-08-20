@@ -6,9 +6,13 @@ import {
   ManyToOne,
   OneToMany,
 } from "typeorm";
-import { Users } from "./Users";
 
 @Index("menus_pkey", ["id"], { unique: true })
+@Index("idx_menus_active", ["isActive"], {})
+@Index("idx_menus_parent_id", ["parentId"], {})
+@Index("idx_menus_permission_id", ["permissionId"], {})
+@Index("idx_menus_route", ["route"], {})
+@Index("idx_menus_sort_order", ["sortOrder"], {})
 @Entity("menus", { schema: "public" })
 export class Menus {
   @Column("uuid", {
@@ -28,6 +32,9 @@ export class Menus {
   })
   description: string | null;
 
+  @Column("uuid", { name: "parent_id", nullable: true })
+  parentId: string | null;
+
   @Column("character varying", { name: "route", nullable: true, length: 200 })
   route: string | null;
 
@@ -40,18 +47,20 @@ export class Menus {
   @Column("boolean", { name: "is_active", default: () => "true" })
   isActive: boolean;
 
+  @Column("uuid", { name: "created_by" })
+  createdBy: string;
+
   @Column("timestamp with time zone", {
     name: "created_at",
     default: () => "CURRENT_TIMESTAMP",
   })
   createdAt: Date;
 
+  @Column("uuid", { name: "updated_by", nullable: true })
+  updatedBy: string | null;
+
   @Column("timestamp with time zone", { name: "updated_at", nullable: true })
   updatedAt: Date | null;
-
-  @ManyToOne(() => Users, (users) => users.menus)
-  @JoinColumn([{ name: "created_by", referencedColumnName: "id" }])
-  createdBy: Users;
 
   @ManyToOne(() => Menus, (menus) => menus.menus)
   @JoinColumn([{ name: "parent_id", referencedColumnName: "id" }])
@@ -59,8 +68,4 @@ export class Menus {
 
   @OneToMany(() => Menus, (menus) => menus.parent)
   menus: Menus[];
-
-  @ManyToOne(() => Users, (users) => users.menus2)
-  @JoinColumn([{ name: "updated_by", referencedColumnName: "id" }])
-  updatedBy: Users;
 }

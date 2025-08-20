@@ -2,12 +2,11 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 
-export const roleGuard: CanActivateFn = async (route) => {
+export const roleGuard: CanActivateFn = (route) => {
     const auth = inject(AuthService);
     const router = inject(Router);
 
-    // Wait for user to be loaded
-    const user = await auth.waitForUserLoad();
+    const user = auth.getCurrentUserFromLocalStorage();
 
     if (!user) {
         router.navigate(['/auth/login']);
@@ -16,7 +15,7 @@ export const roleGuard: CanActivateFn = async (route) => {
 
     const roles = route.data?.['roles'] as string[] | undefined;
     if (!roles || roles.length === 0) {
-        return true; // no specific role required
+        return true;
     }
 
     const userRole = user.role?.name;

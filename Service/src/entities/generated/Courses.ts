@@ -5,8 +5,8 @@ import { Enrollments } from "./Enrollments";
 @Index("courses_pkey", ["id"], { unique: true })
 @Index("idx_courses_instructor", ["instructorId"], {})
 @Index("idx_courses_featured", ["isFeatured"], {})
-@Index("courses_slug_key", ["slug"], { unique: true })
 @Index("idx_courses_slug", ["slug"], {})
+@Index("courses_slug_key", ["slug"], { unique: true })
 @Entity("courses", { schema: "public" })
 export class Courses {
   @Column("uuid", {

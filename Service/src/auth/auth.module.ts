@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -17,11 +17,12 @@ import { Permissions } from '../entities/generated/Permissions';
 import { UserPermissions } from '../entities/generated/UserPermissions';
 import { UserPermissionService } from '../services/user-permission.service';
 import { UserPermissionRepository } from '../repositories/user-permission.repository';
-import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
+import { MenuModule } from '../modules/menu.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Users, Roles, UserRoles, Permissions, UserPermissions]),
+        forwardRef(() => MenuModule),
         PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -43,8 +44,7 @@ import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
         PasswordService,
         RolePermissionAssignmentService,
         UserPermissionService,
-        UserPermissionRepository,
-        RolesPermissionsGuard,
+        UserPermissionRepository
     ],
     exports: [
         AuthService,
@@ -52,8 +52,7 @@ import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
         UserRepository,
         PasswordService,
         RolePermissionAssignmentService,
-        UserPermissionService,
-        RolesPermissionsGuard,
+        UserPermissionService
     ],
 })
 export class AuthModule { }

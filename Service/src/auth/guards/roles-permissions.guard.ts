@@ -39,12 +39,12 @@ export class RolesPermissionsGuard implements CanActivate {
                 context.getClass(),
             ]);
 
-            const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+            const requiredPermissions = this.reflector.getAllAndOverride<{ permissions: string[], requireAll: boolean }>(PERMISSIONS_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
 
-            if (!requiredRoles?.length && !requiredPermissions?.length) {
+            if (!requiredRoles?.length && !requiredPermissions?.permissions?.length) {
                 return true;
             }
 
@@ -68,16 +68,23 @@ export class RolesPermissionsGuard implements CanActivate {
 
             // Check permissions if required
             let hasPermission = true;
-            if (requiredPermissions?.length) {
+            if (requiredPermissions?.permissions?.length) {
                 const userPermissions = await this.userPermissionRepository.find({
                     where: { userId: user.id },
                     relations: ['permission'],
                 });
 
-                const userPermissionNames = userPermissions.map(up => up.permission.name);
-                hasPermission = requiredPermissions.some(permission =>
-                    userPermissionNames.includes(permission)
-                );
+                const userPermissionNames = userPermissions.map(up => up.permission.permissionKey);
+
+                if (requiredPermissions.requireAll) {
+                    hasPermission = requiredPermissions.permissions.every(permission =>
+                        userPermissionNames.includes(permission)
+                    );
+                } else {
+                    hasPermission = requiredPermissions.permissions.some(permission =>
+                        userPermissionNames.includes(permission)
+                    );
+                }
             }
             return hasRole && hasPermission;
 

@@ -4,15 +4,12 @@ import { Router } from '@angular/router';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take, finalize, Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
-// Flag to prevent multiple refresh token requests
 let isRefreshing = false;
 let refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-// Token storage keys
 const TOKEN_KEY = 'edugalaxy_access_token';
 const REFRESH_TOKEN_KEY = 'edugalaxy_refresh_token';
 
-// Helper functions to avoid circular dependency
 function getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
 }
@@ -31,13 +28,11 @@ function clearTokens(): void {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
-// Auth token & refresh handling interceptor (Angular 20 functional style)
 export const authTokenInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
     const router = inject(Router);
     const http = inject(HttpClient);
     const accessToken = getToken();
 
-    // Add auth header if token exists and not already present
     let authReq = req;
     if (accessToken && !req.headers.has('Authorization')) {
         authReq = req.clone({
@@ -47,7 +42,6 @@ export const authTokenInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown
 
     return next(authReq).pipe(
         catchError((error: HttpErrorResponse) => {
-            // Handle 401 errors (token expired/invalid)
             if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
                 return handle401Error(req, next, router, http);
             }

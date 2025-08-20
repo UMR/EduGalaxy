@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
+import { RouteGeneratorService } from '../../../services/route-generator.service';
 
 @Component({
     selector: 'app-main-layout',
@@ -15,7 +16,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     isSidebarExpanded = false;
     private toggleListener?: () => void;
 
-    constructor(private cdr: ChangeDetectorRef) { }
+    constructor(
+        private routeGeneratorService: RouteGeneratorService
+    ) {
+    }
 
     ngOnInit() {
         const savedState = localStorage.getItem('sidebar-collapsed');
@@ -25,8 +29,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
         this.toggleListener = () => {
             this.isSidebarExpanded = !this.isSidebarExpanded;
-            this.cdr.detectChanges();
-            console.log('Sidebar toggled:', this.isSidebarExpanded);
         };
 
         document.addEventListener('toggle-sidebar', this.toggleListener);

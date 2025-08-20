@@ -1,29 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { AuthService } from './auth.service';
 import { DashboardStats, Course, Assignment, UserActivity } from '../models/dashboard.model';
 import { User, Role, Permission, ApiResponse } from '../models/user.model';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
     providedIn: 'root'
 })
 export class DashboardService {
-    private apiUrl = 'http://localhost:3000';
+    private apiUrl = environment.apiUrl;
 
-    // Loading state
-    private loadingSubject = new BehaviorSubject<boolean>(false);
-    public loading$ = this.loadingSubject.asObservable();
+    constructor(private http: HttpClient) { }
 
-    constructor(
-        private http: HttpClient,
-        private authService: AuthService
-    ) { }
-
-    // Admin Dashboard
     getAdminStats(): Observable<DashboardStats> {
-        return this.http.get<ApiResponse<DashboardStats>>(`${this.apiUrl}/admin/stats`, this.authService.getHttpOptions())
+        return this.http.get<ApiResponse<DashboardStats>>(`${this.apiUrl}/admin/stats`)
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -34,7 +26,7 @@ export class DashboardService {
     }
 
     getAllUsers(): Observable<User[]> {
-        return this.http.get<ApiResponse<User[]>>(`${this.apiUrl}/users`, this.authService.getHttpOptions())
+        return this.http.get<ApiResponse<User[]>>(`${this.apiUrl}/users`)
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -45,7 +37,7 @@ export class DashboardService {
     }
 
     getAllRoles(): Observable<Role[]> {
-        return this.http.get<ApiResponse<Role[]>>(`${this.apiUrl}/roles`, this.authService.getHttpOptions())
+        return this.http.get<ApiResponse<Role[]>>(`${this.apiUrl}/roles`)
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -56,7 +48,7 @@ export class DashboardService {
     }
 
     getAllPermissions(): Observable<Permission[]> {
-        return this.http.get<ApiResponse<Permission[]>>(`${this.apiUrl}/roles/permissions`, this.authService.getHttpOptions())
+        return this.http.get<ApiResponse<Permission[]>>(`${this.apiUrl}/roles/permissions`)
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -67,7 +59,7 @@ export class DashboardService {
     }
 
     assignPermissionToRole(roleId: string, permissionId: string): Observable<any> {
-        return this.http.post<ApiResponse<any>>(`${this.apiUrl}/roles/${roleId}/permissions/${permissionId}`, {}, this.authService.getHttpOptions())
+        return this.http.post<ApiResponse<any>>(`${this.apiUrl}/roles/${roleId}/permissions/${permissionId}`, {})
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -78,7 +70,7 @@ export class DashboardService {
     }
 
     removePermissionFromRole(roleId: string, permissionId: string): Observable<any> {
-        return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/roles/${roleId}/permissions/${permissionId}`, this.authService.getHttpOptions())
+        return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/roles/${roleId}/permissions/${permissionId}`)
             .pipe(
                 map(response => response.data),
                 catchError((error) => {
@@ -92,7 +84,6 @@ export class DashboardService {
         return of(this.getMockUserActivities());
     }
 
-    // Student Dashboard
     getStudentStats(): Observable<DashboardStats> {
         return of(this.getMockStudentStats());
     }
@@ -105,7 +96,6 @@ export class DashboardService {
         return of(this.getMockStudentAssignments());
     }
 
-    // Teacher Dashboard
     getTeacherStats(): Observable<DashboardStats> {
         return of(this.getMockTeacherStats());
     }
@@ -291,77 +281,5 @@ export class DashboardService {
                 status: 'pending'
             }
         ];
-    }
-    setLoading(isLoading: boolean) {
-        this.loadingSubject.next(isLoading);
-    }
-
-    formatDate(date: string | Date): string {
-        if (!date) return 'N/A';
-
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
-
-    formatDateTime(date: string | Date): string {
-        if (!date) return 'N/A';
-
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    getStatusColor(status: string): string {
-        if (!status) return 'secondary';
-
-        status = status.toLowerCase();
-
-        if (status === 'active' || status === 'completed' || status === 'approved') {
-            return 'success';
-        } else if (status === 'pending' || status === 'in progress') {
-            return 'warning';
-        } else if (status === 'inactive' || status === 'failed' || status === 'rejected') {
-            return 'danger';
-        } else if (status === 'draft') {
-            return 'secondary';
-        } else {
-            return 'primary';
-        }
-    }
-
-    getGradeColor(grade: number): string {
-        if (grade >= 90) {
-            return 'success';
-        } else if (grade >= 75) {
-            return 'primary';
-        } else if (grade >= 60) {
-            return 'warning';
-        } else {
-            return 'danger';
-        }
-    }
-
-    getDaysUntilDue(dueDate: string | Date): number {
-        if (!dueDate) return 0;
-
-        const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
-        const today = new Date();
-
-        // Reset time portion for accurate day calculation
-        due.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-
-        // Calculate difference in days
-        const differenceMs = due.getTime() - today.getTime();
-        return Math.ceil(differenceMs / (1000 * 60 * 60 * 24));
     }
 }

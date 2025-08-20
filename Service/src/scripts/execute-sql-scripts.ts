@@ -23,11 +23,9 @@ async function executeSqlScripts() {
         console.log('📡 Connected to database');
 
         const scriptsDir = path.join(__dirname, '../database/sql-scripts');
-
-        // Get all SQL files in correct execution order
         const sqlFiles: string[] = [];
 
-        // First, get setup files from root directory (001-setup.sql)
+        // Always run setup files first
         const setupFiles = fs.readdirSync(scriptsDir)
             .filter(file => file.endsWith('.sql') && file.startsWith('001'))
             .map(file => path.join(scriptsDir, file))
@@ -35,17 +33,17 @@ async function executeSqlScripts() {
 
         sqlFiles.push(...setupFiles);
 
-        // Then, get files from tables subdirectory (create tables first)
+        // Handle table creation files with data preservation
         const tablesDir = path.join(scriptsDir, 'tables');
         if (fs.existsSync(tablesDir)) {
             const tableFiles = fs.readdirSync(tablesDir)
                 .filter(file => file.endsWith('.sql'))
                 .map(file => path.join(tablesDir, file))
-                .sort(); // Sort numerically by filename
+                .sort();
             sqlFiles.push(...tableFiles);
         }
 
-        // Then, get other files from views subdirectory
+        // Handle views (safe to recreate)
         const viewsDir = path.join(scriptsDir, 'views');
         if (fs.existsSync(viewsDir)) {
             const viewFiles = fs.readdirSync(viewsDir)
@@ -55,7 +53,7 @@ async function executeSqlScripts() {
             sqlFiles.push(...viewFiles);
         }
 
-        // Then, get files from procedures subdirectory
+        // Handle procedures (safe to recreate)
         const proceduresDir = path.join(scriptsDir, 'procedures');
         if (fs.existsSync(proceduresDir)) {
             const procedureFiles = fs.readdirSync(proceduresDir)
@@ -65,13 +63,22 @@ async function executeSqlScripts() {
             sqlFiles.push(...procedureFiles);
         }
 
-        // Finally, get seed data files from root directory (after tables are created)
-        const seedFiles = fs.readdirSync(scriptsDir)
-            .filter(file => file.endsWith('.sql') && !file.startsWith('001'))
-            .map(file => path.join(scriptsDir, file))
-            .sort(); // This will execute 006-seed-roles-permissions.sql then 007-seed-users.sql
-
-        sqlFiles.push(...seedFiles);
+        // Handle seed files - check if they exist in seeds folder first
+        const seedsDir = path.join(scriptsDir, 'seeds');
+        if (fs.existsSync(seedsDir)) {
+            const seedFiles = fs.readdirSync(seedsDir)
+                .filter(file => file.endsWith('.sql'))
+                .map(file => path.join(seedsDir, file))
+                .sort();
+            sqlFiles.push(...seedFiles);
+        } else {
+            // Fallback to root level seed files
+            const seedFiles = fs.readdirSync(scriptsDir)
+                .filter(file => file.endsWith('.sql') && !file.startsWith('001'))
+                .map(file => path.join(scriptsDir, file))
+                .sort();
+            sqlFiles.push(...seedFiles);
+        }
 
         console.log(`📂 Found ${sqlFiles.length} SQL files to execute`);
 
@@ -80,28 +87,12 @@ async function executeSqlScripts() {
             console.log(`📄 Executing: ${fileName}`);
 
             try {
-                // Skip seed files if data already exists
-                if (fileName.startsWith('006-seed-roles') || fileName.startsWith('007-seed-users')) {
-                    const checkTable = fileName.startsWith('006-') ? 'roles' : 'users';
-                    const checkQuery = `SELECT COUNT(*) as count FROM ${checkTable}`;
-
-                    try {
-                        const result = await client.query(checkQuery);
-                        const count = parseInt(result.rows[0].count);
-
-                        if (count > 0) {
-                            console.log(`⏭️  Skipping ${fileName} - ${checkTable} table already has data (${count} rows)`);
-                            continue;
-                        }
-                    } catch (checkError) {
-                        console.log(`⚠️  Could not check ${checkTable} table, proceeding with ${fileName}`);
-                    }
+                // Check for existing data before running destructive operations
+                if (await shouldSkipFile(client, fileName, filePath)) {
+                    continue;
                 }
 
                 const sqlContent = fs.readFileSync(filePath, 'utf8');
-
-                // For now, execute the entire file as one statement
-                // This handles dollar-quoted strings properly
                 const cleanedContent = sqlContent
                     .split('\n')
                     .filter(line => {
@@ -123,7 +114,7 @@ async function executeSqlScripts() {
                 }
             } catch (error) {
                 console.error(`❌ Error executing ${fileName}:`, error.message);
-                throw error; // Stop execution on error
+                throw error;
             }
         }
 
@@ -139,4 +130,84 @@ async function executeSqlScripts() {
 
 if (require.main === module) {
     executeSqlScripts();
+}
+
+async function shouldSkipFile(client: Client, fileName: string, filePath: string): Promise<boolean> {
+    if (fileName.includes('seed') || filePath.includes('/seeds/')) {
+        try {
+            const tables = ['users', 'roles', 'permissions', 'courses', 'enrollments'];
+            let hasData = false;
+
+            for (const table of tables) {
+                try {
+                    const result = await client.query(`SELECT COUNT(*) as count FROM ${table} WHERE id IS NOT NULL LIMIT 1`);
+                    if (result.rows.length > 0 && parseInt(result.rows[0].count) > 0) {
+                        hasData = true;
+                        break;
+                    }
+                } catch (tableError) {
+                    continue;
+                }
+            }
+
+            if (hasData) {
+                console.log(`⏭️  Skipping ${fileName} - Database already contains data`);
+                return true;
+            }
+        } catch (error) {
+            console.log(`⚠️  Could not check for existing data, proceeding with ${fileName}`);
+        }
+    }
+
+    if (fileName.includes('users.sql') || fileName.includes('005-users')) {
+        try {
+            const result = await client.query(`
+                SELECT COUNT(*) as count 
+                FROM information_schema.tables 
+                WHERE table_name = 'users' AND table_schema = 'public'
+            `);
+
+            if (result.rows.length > 0 && parseInt(result.rows[0].count) > 0) {
+                try {
+                    const dataCheck = await client.query('SELECT COUNT(*) as count FROM users');
+                    if (parseInt(dataCheck.rows[0].count) > 0) {
+                        console.log(`⏭️  Skipping ${fileName} - Users table already exists with data`);
+                        return true;
+                    }
+                } catch (dataError) {
+                    console.log(`⏭️  Skipping ${fileName} - Users table exists`);
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.log(`⚠️  Could not check users table, proceeding with ${fileName}`);
+        }
+    }
+
+    if (fileName.includes('enrollments.sql') || fileName.includes('004-enrollments')) {
+        try {
+            const result = await client.query(`
+                SELECT COUNT(*) as count 
+                FROM information_schema.tables 
+                WHERE table_name = 'enrollments' AND table_schema = 'public'
+            `);
+
+            if (result.rows.length > 0 && parseInt(result.rows[0].count) > 0) {
+                try {
+                    const dataCheck = await client.query('SELECT COUNT(*) as count FROM enrollments');
+                    if (parseInt(dataCheck.rows[0].count) > 0) {
+                        console.log(`⏭️  Skipping ${fileName} - Enrollments table already exists with data`);
+                        return true;
+                    }
+                } catch (dataError) {
+                    console.log(`⏭️  Skipping ${fileName} - Enrollments table exists`);
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.log(`⚠️  Could not check enrollments table, proceeding with ${fileName}`);
+        }
+    }
+
+    return false;
 }

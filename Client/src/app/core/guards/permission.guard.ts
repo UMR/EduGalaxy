@@ -2,12 +2,10 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 
-export const permissionGuard: CanActivateFn = async (route) => {
+export const permissionGuard: CanActivateFn = (route) => {
     const auth = inject(AuthService);
     const router = inject(Router);
-
-    // Wait for user to be loaded
-    const user = await auth.waitForUserLoad();
+    const user = auth.getCurrentUserValue();
 
     if (!user) {
         router.navigate(['/auth/login']);
@@ -18,7 +16,7 @@ export const permissionGuard: CanActivateFn = async (route) => {
     const requireAll = route.data?.['requireAllPermissions'] as boolean || false;
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
-        return true; // No specific permissions required
+        return true;
     }
 
     const hasPermission = requireAll

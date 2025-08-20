@@ -38,7 +38,3 @@ IF NOT EXISTS idx_user_permissions_user_id ON user_permissions
 CREATE INDEX
 IF NOT EXISTS idx_user_permissions_permission_id ON user_permissions
 (permission_id);
-
--- Drop role_permissions table if exists
-DROP TABLE IF EXISTS role_permissions
-CASCADE;

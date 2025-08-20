@@ -44,10 +44,12 @@ export class AuthService {
             password: hashedPassword,
         });
 
-        await this.rolePermissionAssignmentService.assignDefaultRoleAndPermissions(
-            user.id,
-            (roleName as RoleType) || 'student'
-        );
+        if (roleName) {
+            await this.rolePermissionAssignmentService.assignDefaultRoleAndPermissions(
+                user.id,
+                roleName as RoleType
+            );
+        }
 
         const updatedUser = await this.userRepository.findById(user.id);
         return await this.toUserResponse(updatedUser!);
@@ -78,26 +80,22 @@ export class AuthService {
             permissions: permissions,
         });
 
+        if (!primaryRole) {
+            throw new AuthenticationException('User has no assigned role');
+        }
         return {
             ...tokens,
             user: {
                 id: user.id,
                 email: user.email,
                 username: user.username,
-                role: primaryRole ? {
+                role: {
                     id: primaryRole.id,
                     name: primaryRole.name,
                     description: primaryRole.description || undefined,
                     isActive: primaryRole.isActive || false,
                     createdAt: primaryRole.createdAt || new Date(),
                     updatedAt: primaryRole.updatedAt || new Date(),
-                } : {
-                    id: '',
-                    name: 'user',
-                    description: 'Default user role',
-                    isActive: true,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
                 },
                 permissions: await this.userRepository.getUserPermissionsAsObjects(user.id),
             },
@@ -131,6 +129,9 @@ export class AuthService {
     private async toUserResponse(user: any): Promise<IUserResponse> {
         const primaryRole = user.userRoles?.[0]?.role || null;
 
+        if (!primaryRole) {
+            throw new AuthenticationException('User has no assigned role');
+        }
         return {
             id: user.id,
             email: user.email,
@@ -138,20 +139,13 @@ export class AuthService {
             firstName: user.firstName,
             lastName: user.lastName,
             phone: user.phone,
-            role: primaryRole ? {
+            role: {
                 id: primaryRole.id,
                 name: primaryRole.name,
                 description: primaryRole.description || undefined,
                 isActive: primaryRole.isActive || false,
                 createdAt: primaryRole.createdAt || new Date(),
                 updatedAt: primaryRole.updatedAt || new Date(),
-            } : {
-                id: '',
-                name: 'student',
-                description: 'Default student role',
-                isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
             },
             permissions: await this.userRepository.getUserPermissionsAsObjects(user.id),
             isActive: user.isActive,

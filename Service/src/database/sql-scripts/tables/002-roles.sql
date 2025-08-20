@@ -39,3 +39,17 @@ UPDATE ON roles
     FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column
 ();
+
+-- Insert default roles if they don't exist
+INSERT INTO roles
+    (name, description, is_active)
+SELECT *
+FROM (
+    VALUES
+        ('student', 'Student role with basic learning permissions', true),
+        ('teacher', 'Teacher role with course management permissions', true),
+        ('admin', 'Administrator role with full system access', true)
+) AS v(name, description, is_active)
+WHERE NOT EXISTS (SELECT 1
+FROM roles
+WHERE roles.name = v.name);

@@ -139,4 +139,25 @@ export class UserPermissionRepository {
         const result = await this.userPermissionRepo.delete(id);
         return (result.affected ?? 0) > 0;
     }
+
+    async getUserPermissions(userId: string): Promise<UserPermissions[]> {
+        return await this.userPermissionRepo.find({
+            where: { userId },
+            relations: ['permission']
+        });
+    }
+
+    async assignPermissionsByKeys(userId: string, permissionKeys: string[]): Promise<void> {
+        const permissions = await this.permissionRepo.find({
+            where: permissionKeys.map(key => ({ permissionKey: key }))
+        });
+
+        if (!permissions.length) {
+            console.warn(`No permissions found for keys: ${permissionKeys.join(', ')}`);
+            return;
+        }
+
+        const permissionIds = permissions.map(p => p.id);
+        await this.bulkAssignPermissions(userId, permissionIds);
+    }
 }

@@ -1,6 +1,4 @@
-<!-- Sidebar Component -->
 <div class="sidebar" [class.collapsed]="isCollapsed">
-    <!-- Sidebar Header -->
     <div class="sidebar-header">
         <div class="sidebar-brand">
             <i class="fas fa-graduation-cap"></i>
@@ -8,29 +6,27 @@
         </div>
     </div>
 
-
-    <!-- Navigation Menu -->
     <div class="sidebar-menu">
-        <ng-container *ngFor="let group of menuConfig.groups">
-            <!-- Menu Group -->
-            <div class="menu-group" *ngIf="group.items.length > 0">
-                <!-- Group Header -->
-                <div class="menu-group-header" *ngIf="!isCollapsed && group.label">
+        @if(menuConfig.groups.length > 0){
+        @for(group of menuConfig.groups; track $index) {
+        <ng-container>
+            @if(group.items && group.items.length > 0){
+            <div class="menu-group">
+                @if(!isCollapsed && group.label){
+                <div class="menu-group-header">
                     <span class="group-label">{{ group.label }}</span>
                 </div>
+                }
 
-                <!-- Menu Items -->
                 <ul class="menu-list">
                     <li class="menu-item" *ngFor="let item of group.items">
-                        <!-- Divider -->
                         <div class="menu-divider" *ngIf="item.divider"></div>
-
-                        <!-- Regular Menu Item -->
                         <a *ngIf="!item.divider" class="menu-link"
                             [class.active]="item.route && isActiveRoute(item.route)" [routerLink]="item.route || ''"
                             (click)="onMenuItemClick(item)" [title]="isCollapsed ? item.label : ''"
                             [attr.href]="item.route ? null : 'javascript:void(0)'">
-                            <i class="menu-icon" [class]="item.icon || ''" *ngIf="item.icon"></i>
+                            <i class="menu-icon" *ngIf="item.icon" [ngClass]="item.icon"></i>
+
                             <span class="menu-text" *ngIf="!isCollapsed">{{ item.label }}</span>
                             <span class="menu-badge" *ngIf="item.badge && !isCollapsed"
                                 [class]="'badge-' + (item.badge.color || 'primary')">
@@ -38,13 +34,13 @@
                             </span>
                         </a>
 
-                        <!-- Sub Menu Items -->
                         <ul class="submenu" *ngIf="item.children && item.children.length > 0 && !isCollapsed">
                             <li class="submenu-item" *ngFor="let child of item.children">
                                 <a class="submenu-link" [class.active]="child.route && isActiveRoute(child.route)"
                                     [routerLink]="child.route || ''" (click)="onMenuItemClick(child)"
                                     [attr.href]="child.route ? null : 'javascript:void(0)'">
-                                    <i class="submenu-icon" [class]="child.icon || ''" *ngIf="child.icon"></i>
+                                    <i class="submenu-icon" *ngIf="child.icon" [ngClass]="child.icon"></i>
+
                                     <span class="submenu-text">{{ child.label }}</span>
                                 </a>
                             </li>
@@ -52,10 +48,12 @@
                     </li>
                 </ul>
             </div>
+            }
         </ng-container>
+        }
+        }
     </div>
 
-    <!-- Sidebar Footer -->
     <div class="sidebar-footer" *ngIf="!isCollapsed">
         <div class="footer-info">
             <small class="text-muted">EduGalaxy v1.0</small>
@@ -63,5 +61,4 @@
     </div>
 </div>
 
-<!-- Sidebar Overlay for Mobile -->
 <div class="sidebar-overlay" [class.show]="!isCollapsed" (click)="headerToggleEvent()"></div>

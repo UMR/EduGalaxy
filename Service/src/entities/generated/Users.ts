@@ -1,10 +1,8 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
-import { Menus } from "./Menus";
-import { UserPermissions } from "./UserPermissions";
 import { UserRoles } from "./UserRoles";
 
-@Index("users_email_key", ["email"], { unique: true })
 @Index("idx_users_email", ["email"], {})
+@Index("users_email_key", ["email"], { unique: true })
 @Index("users_pkey", ["id"], { unique: true })
 @Index("idx_users_active", ["isActive"], {})
 @Index("idx_users_username", ["username"], {})
@@ -67,21 +65,6 @@ export class Users {
     default: () => "CURRENT_TIMESTAMP",
   })
   updatedAt: Date;
-
-  @OneToMany(() => Menus, (menus) => menus.createdBy)
-  menus: Menus[];
-
-  @OneToMany(() => Menus, (menus) => menus.updatedBy)
-  menus2: Menus[];
-
-  @OneToMany(
-    () => UserPermissions,
-    (userPermissions) => userPermissions.grantedBy
-  )
-  userPermissions: UserPermissions[];
-
-  @OneToMany(() => UserPermissions, (userPermissions) => userPermissions.user)
-  userPermissions2: UserPermissions[];
 
   @OneToMany(() => UserRoles, (userRoles) => userRoles.user)
   userRoles: UserRoles[];
