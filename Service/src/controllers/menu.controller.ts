@@ -66,7 +66,7 @@ export class MenuController {
         @Body() menuData: UpdateMenuDto,
         @Request() req: any
     ): Promise<Menus> {
-        return await this.menuService.updateMenu(id, menuData, req.user.sub);
+        return await this.menuService.updateMenu(id, menuData, req.user);
     }
 
     @Delete(':id')

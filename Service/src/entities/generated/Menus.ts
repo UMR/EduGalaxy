@@ -6,6 +6,8 @@ import {
   ManyToOne,
   OneToMany,
 } from "typeorm";
+import { Users } from "./Users";
+import { Permissions } from "./Permissions";
 
 @Index("menus_pkey", ["id"], { unique: true })
 @Index("idx_menus_active", ["isActive"], {})
@@ -18,7 +20,7 @@ export class Menus {
   @Column("uuid", {
     primary: true,
     name: "id",
-    default: () => "gen_random_uuid()",
+    default: () => "uuid_generate_v4()",
   })
   id: string;
 
@@ -47,25 +49,31 @@ export class Menus {
   @Column("boolean", { name: "is_active", default: () => "true" })
   isActive: boolean;
 
-  @Column("uuid", { name: "created_by" })
-  createdBy: string;
-
   @Column("timestamp with time zone", {
     name: "created_at",
     default: () => "CURRENT_TIMESTAMP",
   })
   createdAt: Date;
 
-  @Column("uuid", { name: "updated_by", nullable: true })
-  updatedBy: string | null;
-
   @Column("timestamp with time zone", { name: "updated_at", nullable: true })
   updatedAt: Date | null;
 
-  @ManyToOne(() => Menus, (menus) => menus.menus)
+  @ManyToOne(() => Users, (users) => users.menus, { onDelete: "SET NULL" })
+  @JoinColumn([{ name: "created_by", referencedColumnName: "id" }])
+  createdBy: Users;
+
+  @ManyToOne(() => Menus, (menus) => menus.menus, { onDelete: "CASCADE" })
   @JoinColumn([{ name: "parent_id", referencedColumnName: "id" }])
   parent: Menus;
 
   @OneToMany(() => Menus, (menus) => menus.parent)
   menus: Menus[];
+
+  @ManyToOne(() => Permissions, (permissions) => permissions.menus)
+  @JoinColumn([{ name: "permission_id", referencedColumnName: "id" }])
+  permission: Permissions;
+
+  @ManyToOne(() => Users, (users) => users.menus2, { onDelete: "SET NULL" })
+  @JoinColumn([{ name: "updated_by", referencedColumnName: "id" }])
+  updatedBy: Users;
 }

@@ -3,6 +3,7 @@ import { MenuRepository } from '../repositories/menu.repository';
 import { UserPermissionRepository } from '../repositories/user-permission.repository';
 import { Menus } from '../entities/generated/Menus';
 import { DEFAULT_MENUS_BY_ROLE, UserRole } from '../common/config/default-permissions.config';
+import { Users } from 'src/entities/generated/Users';
 
 @Injectable()
 export class MenuService {
@@ -35,7 +36,7 @@ export class MenuService {
         await this.userPermissionRepository.assignPermissionsByKeys(userId, permissionKeys);
     }
 
-    async updateMenu(menuId: string, menuData: Partial<Menus>, updatedBy: string): Promise<Menus> {
+    async updateMenu(menuId: string, menuData: Partial<Menus>, updatedBy: Users): Promise<Menus> {
         await this.menuRepository.update(menuId, {
             ...menuData,
             updatedBy: updatedBy

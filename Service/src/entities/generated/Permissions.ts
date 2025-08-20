@@ -1,10 +1,11 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
+import { Menus } from "./Menus";
 import { UserPermissions } from "./UserPermissions";
 
 @Index("permissions_pkey", ["id"], { unique: true })
 @Index("idx_permissions_active", ["isActive"], {})
-@Index("idx_permissions_key", ["permissionKey"], {})
 @Index("permissions_permission_key_key", ["permissionKey"], { unique: true })
+@Index("idx_permissions_key", ["permissionKey"], {})
 @Index("idx_permissions_type", ["type"], {})
 @Entity("permissions", { schema: "public" })
 export class Permissions {
@@ -55,6 +56,9 @@ export class Permissions {
     default: () => "CURRENT_TIMESTAMP",
   })
   updatedAt: Date | null;
+
+  @OneToMany(() => Menus, (menus) => menus.permission)
+  menus: Menus[];
 
   @OneToMany(
     () => UserPermissions,

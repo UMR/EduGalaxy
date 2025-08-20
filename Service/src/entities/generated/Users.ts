@@ -1,12 +1,13 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
+import { Menus } from "./Menus";
 import { UserRoles } from "./UserRoles";
 
-@Index("idx_users_email", ["email"], {})
 @Index("users_email_key", ["email"], { unique: true })
+@Index("idx_users_email", ["email"], {})
 @Index("users_pkey", ["id"], { unique: true })
 @Index("idx_users_active", ["isActive"], {})
-@Index("idx_users_username", ["username"], {})
 @Index("users_username_key", ["username"], { unique: true })
+@Index("idx_users_username", ["username"], {})
 @Entity("users", { schema: "public" })
 export class Users {
   @Column("uuid", {
@@ -65,6 +66,12 @@ export class Users {
     default: () => "CURRENT_TIMESTAMP",
   })
   updatedAt: Date;
+
+  @OneToMany(() => Menus, (menus) => menus.createdBy)
+  menus: Menus[];
+
+  @OneToMany(() => Menus, (menus) => menus.updatedBy)
+  menus2: Menus[];
 
   @OneToMany(() => UserRoles, (userRoles) => userRoles.user)
   userRoles: UserRoles[];
