@@ -4,8 +4,8 @@ import { UserPermissions } from "./UserPermissions";
 @Index("idx_permissions_resource_action", ["action", "resource"], {})
 @Index("permissions_pkey", ["id"], { unique: true })
 @Index("idx_permissions_active", ["isActive"], {})
-@Index("permissions_name_key", ["name"], { unique: true })
 @Index("idx_permissions_name", ["name"], {})
+@Index("permissions_name_key", ["name"], { unique: true })
 @Entity("permissions", { schema: "public" })
 export class Permissions {
   @Column("uuid", {
