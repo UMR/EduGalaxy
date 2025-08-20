@@ -7,7 +7,7 @@
             <div class="brand-logo">
                 <i class="fas fa-graduation-cap"></i>
             </div>
-            <h1 class="brand-title">Join EduGalaxy</h1>
+            <h1 class="brand-title">Join Edu Galaxy</h1>
             <p class="brand-subtitle">Start your learning adventure today</p>
         </div>
 
@@ -199,16 +199,6 @@
                 </div>
             </div>
 
-            <!-- Marketing Emails -->
-            <div class="form-group">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" formControlName="emailMarketing" />
-                    <span class="checkmark"></span>
-                    <span class="checkbox-label">
-                        Send me updates about new courses and features
-                    </span>
-                </label>
-            </div>
 
             <!-- Submit Button -->
             <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading"
@@ -235,24 +225,6 @@
                 {{ successMessage }}
             </div>
         </form>
-
-        <!-- Divider -->
-        <div class="auth-divider">
-            <span>or</span>
-        </div>
-
-        <!-- Social Registration -->
-        <div class="social-login">
-            <button type="button" class="social-btn google-btn">
-                <i class="fab fa-google"></i>
-                Sign up with Google
-            </button>
-            <button type="button" class="social-btn microsoft-btn">
-                <i class="fab fa-microsoft"></i>
-                Sign up with Microsoft
-            </button>
-        </div>
-
         <!-- Login Link -->
         <div class="auth-footer">
             <p>Already have an account?
