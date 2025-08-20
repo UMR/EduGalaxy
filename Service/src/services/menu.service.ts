@@ -56,13 +56,10 @@ export class MenuService {
     private buildMenuHierarchy(menus: Menus[]): Menus[] {
         const menuMap = new Map<string, Menus>();
         const rootMenus: Menus[] = [];
-
-        // Create a map of all menus
         menus.forEach(menu => {
             menuMap.set(menu.id, { ...menu, children: [] });
         });
 
-        // Build hierarchy
         menus.forEach(menu => {
             const menuWithChildren = menuMap.get(menu.id)!;
 
@@ -74,7 +71,7 @@ export class MenuService {
                     }
                     parent.children.push(menuWithChildren);
                 } else {
-                    // Parent not found or user doesn't have permission, treat as root
+                    rootMenus.push(menuWithChildren);
                     rootMenus.push(menuWithChildren);
                 }
             } else {

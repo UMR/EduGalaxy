@@ -11,7 +11,6 @@ import {
     UserAlreadyExistsException,
     ValidationException,
 } from '../../common/exceptions/auth.exceptions';
-import { MenuService } from 'src/services/menu.service';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +19,6 @@ export class AuthService {
         private readonly passwordService: PasswordService,
         private readonly tokenService: TokenService,
         private readonly rolePermissionAssignmentService: RolePermissionAssignmentService,
-        private readonly menuService: MenuService
     ) { }
 
     async register(registerDto: RegisterDto): Promise<IUserResponse> {
@@ -63,7 +61,6 @@ export class AuthService {
         if (!user) {
             throw new AuthenticationException('Invalid credentials');
         }
-        
         if (!user.isActive) {
             throw new AuthenticationException('Account is deactivated');
         }
@@ -101,7 +98,6 @@ export class AuthService {
                     updatedAt: primaryRole.updatedAt || new Date(),
                 },
                 permissions: await this.userRepository.getUserPermissionsAsObjects(user.id),
-                menus: await this.menuService.getMenusByUserId(user.id),
             },
         };
     }

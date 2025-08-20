@@ -24,7 +24,6 @@ export interface ILoginResponse {
         username: string;
         role: IRole;
         permissions: IPermission[];
-        menus: any[];
     };
 }
 
