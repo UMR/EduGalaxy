@@ -9,16 +9,9 @@
             }}!</p>
     </div>
 
-    <!-- Loading State -->
-    <div class="loading-container" *ngIf="isLoading">
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading dashboard data...</p>
-        </div>
-    </div>
 
     <!-- Main Content -->
-    <div class="dashboard-content" *ngIf="!isLoading">
+    <div class="dashboard-content">
         <!-- Stats Cards -->
         <section class="stats-section">
             <div class="stats-grid">

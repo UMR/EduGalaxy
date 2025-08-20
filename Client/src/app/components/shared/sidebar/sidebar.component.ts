@@ -40,6 +40,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             .subscribe(config => {
                 if (config.groups && config.groups.length > 0) {
                     this.menuConfig = config;
+                    console.log('Menu config loaded:', this.menuConfig);
                     this.cdr.detectChanges();
                 }
             });

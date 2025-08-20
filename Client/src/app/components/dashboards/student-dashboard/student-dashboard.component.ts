@@ -21,6 +21,7 @@ export class StudentDashboardComponent implements OnInit {
 
     isLoading = true;
     private loadCounter = 0;
+    currentUser: any;
 
     constructor(
         private authService: AuthService,
@@ -28,6 +29,10 @@ export class StudentDashboardComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        this.authService.currentUser$.subscribe(user => {
+            this.currentUser = user;
+        });
+
         this.loadDashboardData();
     }
 
@@ -66,11 +71,6 @@ export class StudentDashboardComponent implements OnInit {
             }
         });
     }
-
-    get currentUser() {
-        return this.authService.getCurrentUserValue();
-    }
-
     getStatusColor(status: string): string {
         switch (status?.toLowerCase()) {
             case 'active': return 'success';

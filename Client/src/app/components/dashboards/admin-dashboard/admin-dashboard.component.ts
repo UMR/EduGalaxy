@@ -20,12 +20,11 @@ export class AdminDashboardComponent implements OnInit {
     roles: Role[] = [];
     permissions: Permission[] = [];
     activities: UserActivity[] = [];
-
-    isLoading = true;
     selectedUser: User | null = null;
     selectedRole: Role | null = null;
     showUserModal = false;
     showRoleModal = false;
+    currentUser: any;
 
     constructor(
         private authService: AuthService,
@@ -34,10 +33,12 @@ export class AdminDashboardComponent implements OnInit {
 
     ngOnInit() {
         this.loadDashboardData();
+        this.authService.currentUser$.subscribe(user => {
+            this.currentUser = user;
+        });
     }
 
     loadDashboardData() {
-        this.isLoading = true;
 
         forkJoin({
             stats: this.dashboardService.getAdminStats(),
@@ -52,18 +53,13 @@ export class AdminDashboardComponent implements OnInit {
                 this.roles = data.roles || [];
                 this.permissions = data.permissions || [];
                 this.activities = data.activities || [];
-                this.isLoading = false;
             },
             error: (error) => {
                 console.error('Error loading dashboard data:', error);
-                this.isLoading = false;
             }
         });
     }
 
-    get currentUser() {
-        return this.authService.getCurrentUserValue();
-    }
 
     viewUser(user: User) {
         this.selectedUser = user;

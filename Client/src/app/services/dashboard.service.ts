@@ -15,14 +15,14 @@ export class DashboardService {
     constructor(private http: HttpClient) { }
 
     getAdminStats(): Observable<DashboardStats> {
-        return this.http.get<ApiResponse<DashboardStats>>(`${this.apiUrl}/admin/stats`)
-            .pipe(
-                map(response => response.data),
-                catchError((error) => {
-                    console.warn('Failed to fetch admin stats, using mock data:', error.message || 'Unknown error');
-                    return of(this.getMockAdminStats());
-                })
-            );
+        // return this.http.get<ApiResponse<DashboardStats>>(`${this.apiUrl}/admin/stats`)
+        //     .pipe(
+        //         map(response => response.data),
+        //         catchError((error) => {
+        //             console.warn('Failed to fetch admin stats, using mock data:', error.message || 'Unknown error');
+        return of(this.getMockAdminStats());
+        //     })
+        // );
     }
 
     getAllUsers(): Observable<User[]> {
@@ -37,25 +37,25 @@ export class DashboardService {
     }
 
     getAllRoles(): Observable<Role[]> {
-        return this.http.get<ApiResponse<Role[]>>(`${this.apiUrl}/roles`)
-            .pipe(
-                map(response => response.data),
-                catchError((error) => {
-                    console.warn('Failed to fetch roles, using mock data:', error.message || 'Unknown error');
-                    return of(this.getMockRoles());
-                })
-            );
+        // return this.http.get<ApiResponse<Role[]>>(`${this.apiUrl}/roles`)
+        //     .pipe(
+        //         map(response => response.data),
+        //         catchError((error) => {
+        //             console.warn('Failed to fetch roles, using mock data:', error.message || 'Unknown error');
+        return of(this.getMockRoles());
+        //     })
+        // );
     }
 
     getAllPermissions(): Observable<Permission[]> {
-        return this.http.get<ApiResponse<Permission[]>>(`${this.apiUrl}/roles/permissions`)
-            .pipe(
-                map(response => response.data),
-                catchError((error) => {
-                    console.warn('Failed to fetch permissions, using mock data:', error.message || 'Unknown error');
-                    return of(this.getMockPermissions());
-                })
-            );
+        // return this.http.get<ApiResponse<Permission[]>>(`${this.apiUrl}/roles/permissions`)
+        //     .pipe(
+        //         map(response => response.data),
+        //         catchError((error) => {
+        //             console.warn('Failed to fetch permissions, using mock data:', error.message || 'Unknown error');
+        return of(this.getMockPermissions());
+        //     })
+        // );
     }
 
     assignPermissionToRole(roleId: string, permissionId: string): Observable<any> {

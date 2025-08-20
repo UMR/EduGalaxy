@@ -10,7 +10,6 @@ export class DynamicRouteService {
     private componentMapping: { [key: string]: () => Promise<any> } = {
         '/dashboard': () => import('../components/shared/dashboard-redirect/dashboard-redirect.component').then(m => m.DashboardRedirectComponent),
         '/profile': () => import('../components/shared/profile/profile.component').then(m => m.ProfileComponent),
-        '/admin': () => import('../components/dashboards/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
         'default': () => import('../components/shared/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
     };
 
